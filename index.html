@@ -3,214 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo-Tarkistaja Pro</title>
+    <title>Bingo-Sovellus Pro</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #1a1a2e; --white: #ffffff; --accent: #e94560; --success: #0f9d58; --blue: #2980b9; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; min-height: 100vh; }
+        :root { --bg: #1a1a2e; --white: #ffffff; --accent: #e94560; --success: #0f9d58; --blue: #2980b9; --gold: #f1c40f; --grey: #95a5a6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; margin: 0; padding: 10px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 500px; text-align: center; }
         
-        .step-card { background: white; color: #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .card { background: white; color: #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .hidden { display: none; }
         
-        .btn { background: var(--accent); color: white; border: none; padding: 15px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-blue { background: var(--blue); }
+        .btn { border: none; padding: 15px 25px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-main { background: var(--accent); color: white; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-gold { background: var(--gold); color: #1a1a2e; }
+        .btn-back { background: var(--grey); color: white; margin-top: 20px; font-size: 15px; }
 
-        #reader { width: 100%; background: #000; border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        #reader { width: 100%; background: #000; border-radius: 10px; margin-top: 15px; overflow: hidden; min-height: 250px; }
         
+        /* BINGO RUUDUKKO */
         .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 15px; background: #444; padding: 5px; border-radius: 8px; }
         .cell { background: white; color: black; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border-radius: 4px; position: relative; }
         .cell.matched { background: #ffdee2; }
         .cell.matched::after { content: ""; position: absolute; width: 70%; height: 70%; border: 3px solid var(--accent); border-radius: 50%; }
-        .cell.star { color: #f1c40f; font-size: 22px; }
+        .cell.star { color: var(--gold); font-size: 22px; }
         .spacer { grid-column: span 5; height: 12px; background: #222; }
 
-        .analysis-card { background: #0f3460; color: white; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: left; border-left: 5px solid var(--success); }
-        .analysis-card h2 { margin: 0; color: var(--success); }
-        .grid-label { font-size: 12px; color: #aaa; margin-top: 10px; display: block; text-transform: uppercase; }
+        /* ARVONTA TYYLIT */
+        .raffle-list { text-align: left; max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ddd; }
+        .winner-display { font-size: 32px; font-weight: bold; color: var(--success); margin: 20px 0; padding: 20px; border: 4px dashed var(--gold); border-radius: 15px; background: #f0fff4; display: none; word-wrap: break-word; }
+        .rolling { animation: flash 0.1s infinite; color: var(--accent); }
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Bingo-Analyysi</h1>
+    <h1>Bingo-Sovellus</h1>
 
-    <!-- VAIHE 0: VALINTA -->
-    <div id="step0" class="step-card">
-        <h3>Valitse Pelimuoto</h3>
-        <button class="btn" onclick="selectMode('pieni')">Pieni (5x5)</button>
-        <button class="btn btn-blue" onclick="selectMode('iso')">Iso (3 x 5x5)</button>
+    <!-- ETUSIVU -->
+    <div id="step-mode" class="card">
+        <h3>Päävalikko</h3>
+        <button class="btn btn-main" onclick="selectMode('pieni')">Pieni Bingo (5x5)</button>
+        <button class="btn btn-blue" onclick="selectMode('iso')">Iso Bingo (3x5x5)</button>
+        <button class="btn btn-gold" onclick="selectMode('raffle')">🎁 Lisäarvonta</button>
     </div>
 
-    <!-- VAIHE 1: TV -->
-    <div id="step1" class="step-card hidden">
+    <!-- VAIHE 1: TV SKANNAUS -->
+    <div id="step-tv" class="card hidden">
         <h3>VAIHE 1: Skannaa TV</h3>
-        <p>Lue QR-koodi televisiosta saadaksesi huudetut numerot.</p>
-        <button class="btn" onclick="startScan('tv')">Avaa Kamera</button>
-        <div id="tv-status" style="margin-top:10px; color: var(--blue);"></div>
+        <p>Lue TV:n QR-koodi saadaksesi huudetut numerot.</p>
+        <button class="btn btn-main" onclick="startScanner('tv')">Avaa Kamera</button>
+        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
     </div>
 
-    <!-- VAIHE 2: LAPPU -->
-    <div id="step2" class="step-card hidden">
-        <h3>VAIHE 2: Skannaa Paperilappu</h3>
-        <p>Lue QR-koodi paperisesta bingolapusta.</p>
-        <button class="btn" onclick="startScan('card')">Avaa Kamera</button>
+    <!-- VAIHE 2: LAPPU SKANNAUS -->
+    <div id="step-card" class="card hidden">
+        <h3>VAIHE 2: Skannaa Lappu</h3>
+        <p>Lue paperilapun QR-koodi tarkistaaksesi voitot.</p>
+        <button class="btn btn-main" onclick="startScanner('card')">Avaa Kamera</button>
+        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
     </div>
 
-    <!-- SKANNERI-ALUE -->
-    <div id="reader-container" class="hidden">
-        <div id="reader"></div>
-        <button class="btn btn-blue" onclick="cancelScan()">Peruuta</button>
-    </div>
-
-    <!-- TULOSALUE -->
-    <div id="result-area" class="hidden">
-        <div class="analysis-card">
-            <h2 id="total-bingos">0 Riviä</h2>
-            <div id="breakdown-text"></div>
+    <!-- LISÄARVONTA NÄKYMÄ -->
+    <div id="step-raffle" class="card hidden">
+        <h3>🎁 Lisäarvonta</h3>
+        <p>Skannaa 6-numeroisia koodeja arvontaan.</p>
+        <button class="btn btn-gold" onclick="startScanner('raffle')">Skannaa Osallistuja</button>
+        
+        <div id="raffle-container" class="hidden">
+            <div class="raffle-list" id="participant-list"></div>
+            <p>Osallistujia: <span id="participant-count">0</span></p>
+            <div id="winner-box" class="winner-display">000000</div>
+            <button class="btn btn-blue" id="draw-btn" onclick="runRaffle()">SUORITA ARVONTA</button>
         </div>
-        <div id="bingo-grid" class="bingo-grid"></div>
-        <button class="btn btn-blue" onclick="location.reload()">Uusi tarkistus</button>
+        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+    </div>
+
+    <!-- SKANNERI-UI -->
+    <div id="scanner-ui" class="hidden" style="width:100%">
+        <div id="reader"></div>
+        <button class="btn btn-blue" onclick="stopScanner()">Peruuta skannaus</button>
+    </div>
+
+    <!-- BINGO TULOKSET -->
+    <div id="step-results" class="hidden" style="width: 100%;">
+        <div class="card">
+            <h2 id="res-total" style="color:var(--success); margin:0;">0 Riviä Valmiina!</h2>
+            <div id="res-breakdown" style="margin: 10px 0; font-weight:bold; color:#555;"></div>
+            <div id="bingo-grid" class="bingo-grid"></div>
+            <button class="btn btn-blue" onclick="retryCard()">Tarkista toinen lappu</button>
+            <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+        </div>
     </div>
 </div>
 
 <script>
-    let html5QrCode = null;
+    let scanner = null;
     let calledNumbers = [];
-    let gameMode = 'pieni';
-    let scanTarget = '';
+    let gameMode = '';
+    let currentTarget = '';
+    let participants = [];
 
-    window.onload = () => { showStep(0); };
-
-    function selectMode(mode) {
-        gameMode = mode;
-        showStep(1);
-    }
-
-    function showStep(s) {
-        document.getElementById('step0').classList.add('hidden');
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.add('hidden');
-        document.getElementById('reader-container').classList.add('hidden');
-        document.getElementById('step' + s).classList.remove('hidden');
-    }
-
-    function startScan(target) {
-        scanTarget = target;
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.add('hidden');
-        document.getElementById('reader-container').classList.remove('hidden');
-
-        if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            (text) => handleScanSuccess(text)
-        ).catch(err => {
-            alert("Kamera-apu: Salli kameran käyttö.");
-            cancelScan();
-        });
-    }
-
-    function cancelScan() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                showStep(scanTarget === 'tv' ? 1 : 2);
-            });
+    function selectMode(m) {
+        gameMode = m;
+        document.getElementById('step-mode').classList.add('hidden');
+        if (m === 'raffle') {
+            document.getElementById('step-raffle').classList.remove('hidden');
+        } else {
+            document.getElementById('step-tv').classList.remove('hidden');
         }
     }
 
-    function handleScanSuccess(text) {
-        // Pysäytetään kamera välittömästi
-        html5QrCode.stop().then(() => {
-            document.getElementById('reader-container').classList.add('hidden');
-            
-            if (scanTarget === 'tv') {
-                calledNumbers = (text.match(/\d+/g) || []).map(Number);
-                document.getElementById('tv-status').innerText = "Vastaanotettu " + calledNumbers.length + " numeroa.";
-                setTimeout(() => showStep(2), 500); // Pieni viive varmuuden vuoksi
-            } else {
-                parseCard(text);
-            }
+    function goHome() {
+        if (confirm("Haluatko varmasti palata etusivulle? Kaikki nykyiset tiedot nollataan.")) {
+            location.reload();
+        }
+    }
+
+    function retryCard() {
+        document.getElementById('step-results').classList.add('hidden');
+        document.getElementById('step-card').classList.remove('hidden');
+    }
+
+    async function startScanner(target) {
+        currentTarget = target;
+        // Piilotetaan kaikki kortit skannauksen ajaksi
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById('scanner-ui').classList.remove('hidden');
+
+        if (!scanner) scanner = new Html5Qrcode("reader");
+        
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        scanner.start({ facingMode: "environment" }, config, onScanSuccess)
+        .catch(() => { 
+            alert("Kamera ei aukea. Tarkista luvat."); 
+            stopScanner(); 
         });
     }
 
-    function parseCard(text) {
+    function onScanSuccess(text) {
+        if (currentTarget === 'raffle') {
+            const match = text.match(/\d{6}/);
+            if (match) {
+                const code = match[0];
+                if (!participants.includes(code)) {
+                    participants.push(code);
+                    updateRaffleUI();
+                } else {
+                    alert("Tämä koodi on jo mukana!");
+                }
+                stopScanner();
+            } else {
+                alert("Koodi ei ole 6-numeroinen luku.");
+                stopScanner();
+            }
+        } else if (currentTarget === 'tv') {
+            calledNumbers = (text.match(/\d+/g) || []).map(Number);
+            stopScanner();
+            if (calledNumbers.length > 0) {
+                document.getElementById('step-card').classList.remove('hidden');
+            } else {
+                alert("Koodista ei löytynyt numeroita.");
+                document.getElementById('step-tv').classList.remove('hidden');
+            }
+        } else if (currentTarget === 'card') {
+            stopScanner();
+            parseBingoCard(text);
+        }
+    }
+
+    function stopScanner() {
+        if (scanner) scanner.stop().catch(() => {});
+        document.getElementById('scanner-ui').classList.add('hidden');
+        
+        // Palautetaan oikea näkymä
+        if (gameMode === 'raffle') {
+            document.getElementById('step-raffle').classList.remove('hidden');
+        } else if (calledNumbers.length === 0) {
+            document.getElementById('step-tv').classList.remove('hidden');
+        } else {
+            document.getElementById('step-card').classList.remove('hidden');
+        }
+    }
+
+    /* ARVONTA */
+    function updateRaffleUI() {
+        document.getElementById('raffle-container').classList.remove('hidden');
+        document.getElementById('participant-list').innerHTML = participants.map(p => `• ${p}`).join('<br>');
+        document.getElementById('participant-count').innerText = participants.length;
+        document.getElementById('winner-box').style.display = 'none';
+    }
+
+    function runRaffle() {
+        if (participants.length === 0) return;
+        const btn = document.getElementById('draw-btn');
+        const box = document.getElementById('winner-box');
+        btn.disabled = true;
+        box.style.display = 'block';
+        box.classList.add('rolling');
+
+        let counter = 0;
+        const interval = setInterval(() => {
+            box.innerText = participants[Math.floor(Math.random() * participants.length)];
+            counter++;
+            if (counter > 25) {
+                clearInterval(interval);
+                const winner = participants[Math.floor(Math.random() * participants.length)];
+                box.innerText = "VOITTAJA:\n" + winner;
+                box.classList.remove('rolling');
+                btn.disabled = false;
+                btn.innerText = "ARVO UUSI VOITTAJA";
+            }
+        }, 100);
+    }
+
+    /* BINGO */
+    function parseBingoCard(text) {
         const letters = ['B', 'I', 'N', 'G', 'O'];
         const columns = {};
         letters.forEach(l => {
             const regex = new RegExp(l + ":\\s*([\\d,T\\s]+)", "i");
             const match = text.match(regex);
-            columns[l] = match ? match[1].split(/[\s,]+/).filter(x => x !== "") : [];
+            columns[l] = match ? match[1].split(/[\s,]+/).filter(x => x.trim() !== "") : [];
         });
-        renderResults(columns);
+        showBingoResults(columns);
     }
 
-    function renderResults(cols) {
+    function showBingoResults(cols) {
+        document.getElementById('step-card').classList.add('hidden');
+        document.getElementById('step-results').classList.remove('hidden');
         const gridDiv = document.getElementById('bingo-grid');
         gridDiv.innerHTML = "";
-        document.getElementById('result-area').classList.remove('hidden');
         
         const rowsCount = gameMode === 'pieni' ? 5 : 15;
         let board = [];
 
         for (let r = 0; r < rowsCount; r++) {
             if (gameMode === 'iso' && r > 0 && r % 5 === 0) {
-                const spacer = document.createElement('div');
-                spacer.className = 'spacer';
+                const spacer = document.createElement('div'); spacer.className = 'spacer';
                 gridDiv.appendChild(spacer);
             }
-
-            let rowData = [];
+            let rowMatched = [];
             ['B','I','N','G','O'].forEach(l => {
                 let val = cols[l][r] || "";
                 let isStar = (val.toUpperCase() === 'T');
                 let num = isStar ? 'T' : parseInt(val);
                 let isMatched = isStar || calledNumbers.includes(num);
-
-                rowData.push(isMatched);
-
+                rowMatched.push(isMatched);
                 const cell = document.createElement('div');
                 cell.className = 'cell' + (isMatched ? ' matched' : '') + (isStar ? ' star' : '');
                 cell.innerHTML = isStar ? "★" : (num || "");
                 gridDiv.appendChild(cell);
             });
-            board.push(rowData);
+            board.push(rowMatched);
         }
 
-        analyzeWin(board);
-    }
-
-    function analyzeWin(board) {
-        let fullRows = [];
-        board.forEach((row, index) => {
-            if (row.every(cell => cell === true)) {
-                fullRows.push(index);
-            }
-        });
-
-        const total = fullRows.length;
-        document.getElementById('total-bingos').innerText = total + (total === 1 ? " Rivi" : " Riviä") + " Valmiina!";
-
-        let breakdown = "";
-        if (gameMode === 'iso') {
-            let g1 = fullRows.filter(r => r < 5).length;
-            let g2 = fullRows.filter(r => r >= 5 && r < 10).length;
-            let g3 = fullRows.filter(r => r >= 10).length;
-            
-            breakdown = `
-                <span class="grid-label">Taulukko 1 (Ylä):</span> ${g1} riviä<br>
-                <span class="grid-label">Taulukko 2 (Keski):</span> ${g2} riviä<br>
-                <span class="grid-label">Taulukko 3 (Ala):</span> ${g3} riviä
-            `;
-        } else {
-            breakdown = "Kaikki rivit tarkistettu perinteisestä 5x5 ruudukosta.";
-        }
+        let fullRows = board.filter(row => row.length === 5 && row.every(c => c === true)).length;
+        document.getElementById('res-total').innerText = fullRows + (fullRows === 1 ? " Rivi Valmiina!" : " Riviä Valmiina!");
         
-        document.getElementById('breakdown-text').innerHTML = breakdown;
+        if (gameMode === 'iso') {
+            let r1 = board.slice(0,5).filter(row => row.every(c => c === true)).length;
+            let r2 = board.slice(5,10).filter(row => row.every(c => c === true)).length;
+            let r3 = board.slice(10,15).filter(row => row.every(c => c === true)).length;
+            document.getElementById('res-breakdown').innerHTML = `Ylä: ${r1} | Keski: ${r2} | Ala: ${r3}`;
+        } else {
+            document.getElementById('res-breakdown').innerHTML = "5x5 Perusruudukko";
+        }
     }
 </script>
-
 </body>
 </html>
