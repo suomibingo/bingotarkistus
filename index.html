@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo-Sovellus Pro</title>
+    <title>Bingo-Tarkistaja Pro</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { --bg: #1a1a2e; --white: #ffffff; --accent: #e94560; --success: #0f9d58; --blue: #2980b9; --gold: #f1c40f; --grey: #95a5a6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; margin: 0; padding: 10px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; min-height: 100vh; }
         .container { width: 100%; max-width: 500px; text-align: center; }
         
         .card { background: white; color: #333; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -22,6 +22,11 @@
 
         #reader { width: 100%; background: #000; border-radius: 10px; margin-top: 15px; overflow: hidden; min-height: 250px; }
         
+        /* RIVI-VALITSIN */
+        .line-selector { display: flex; justify-content: space-around; margin-top: 15px; }
+        .line-btn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--blue); background: white; font-weight: bold; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .line-btn.active { background: var(--blue); color: white; }
+
         /* BINGO RUUDUKKO */
         .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 15px; background: #444; padding: 5px; border-radius: 8px; }
         .cell { background: white; color: black; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; border-radius: 4px; position: relative; }
@@ -30,11 +35,11 @@
         .cell.star { color: var(--gold); font-size: 22px; }
         .spacer { grid-column: span 5; height: 12px; background: #222; }
 
-        /* ARVONTA TYYLIT */
-        .raffle-list { text-align: left; max-height: 150px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 8px; margin-top: 10px; font-family: monospace; font-size: 14px; border: 1px solid #ddd; }
-        .winner-display { font-size: 32px; font-weight: bold; color: var(--success); margin: 20px 0; padding: 20px; border: 4px dashed var(--gold); border-radius: 15px; background: #f0fff4; display: none; word-wrap: break-word; }
-        .rolling { animation: flash 0.1s infinite; color: var(--accent); }
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* TULOS-IKKUNAT */
+        .status-banner { padding: 15px; border-radius: 10px; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
+        .status-genuine { background: var(--success); color: white; }
+        .status-invalid { background: var(--accent); color: white; }
+        .breakdown { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -44,57 +49,66 @@
 
     <!-- ETUSIVU -->
     <div id="step-mode" class="card">
-        <h3>Päävalikko</h3>
+        <h3>1. Valitse Pelimuoto</h3>
         <button class="btn btn-main" onclick="selectMode('pieni')">Pieni Bingo (5x5)</button>
         <button class="btn btn-blue" onclick="selectMode('iso')">Iso Bingo (3x5x5)</button>
         <button class="btn btn-gold" onclick="selectMode('raffle')">🎁 Lisäarvonta</button>
     </div>
 
-    <!-- VAIHE 1: TV SKANNAUS -->
+    <!-- RIVI-VALINTA -->
+    <div id="step-lines" class="card hidden">
+        <h3>2. Kuinka monta riviä haetaan?</h3>
+        <div class="line-selector">
+            <div class="line-btn" onclick="setLines(1)">1</div>
+            <div class="line-btn" onclick="setLines(2)">2</div>
+            <div class="line-btn" onclick="setLines(3)">3</div>
+            <div class="line-btn" onclick="setLines(4)">4</div>
+            <div class="line-btn" onclick="setLines(5)">5</div>
+        </div>
+        <button class="btn btn-back" onclick="location.reload()">Peruuta</button>
+    </div>
+
+    <!-- TV SKANNAUS -->
     <div id="step-tv" class="card hidden">
-        <h3>VAIHE 1: Skannaa TV</h3>
-        <p>Lue TV:n QR-koodi saadaksesi huudetut numerot.</p>
+        <h3>3. Skannaa TV</h3>
+        <p>Haetaan <b id="target-display">X</b> riviä samasta ruudukosta.</p>
         <button class="btn btn-main" onclick="startScanner('tv')">Avaa Kamera</button>
-        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+        <button class="btn btn-back" onclick="goHome()">← Alkuun</button>
     </div>
 
-    <!-- VAIHE 2: LAPPU SKANNAUS -->
+    <!-- LAPPU SKANNAUS -->
     <div id="step-card" class="card hidden">
-        <h3>VAIHE 2: Skannaa Lappu</h3>
-        <p>Lue paperilapun QR-koodi tarkistaaksesi voitot.</p>
+        <h3>4. Skannaa Paperilappu</h3>
         <button class="btn btn-main" onclick="startScanner('card')">Avaa Kamera</button>
-        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+        <button class="btn btn-back" onclick="goHome()">← Alkuun</button>
     </div>
 
-    <!-- LISÄARVONTA NÄKYMÄ -->
+    <!-- LISÄARVONTA -->
     <div id="step-raffle" class="card hidden">
         <h3>🎁 Lisäarvonta</h3>
-        <p>Skannaa 6-numeroisia koodeja arvontaan.</p>
         <button class="btn btn-gold" onclick="startScanner('raffle')">Skannaa Osallistuja</button>
-        
         <div id="raffle-container" class="hidden">
-            <div class="raffle-list" id="participant-list"></div>
-            <p>Osallistujia: <span id="participant-count">0</span></p>
-            <div id="winner-box" class="winner-display">000000</div>
-            <button class="btn btn-blue" id="draw-btn" onclick="runRaffle()">SUORITA ARVONTA</button>
+            <div id="participant-list" style="text-align:left; font-size:14px; background:#eee; padding:10px; margin-top:10px;"></div>
+            <div id="winner-box" style="font-size:24px; font-weight:bold; color:var(--success); margin:15px 0; display:none;"></div>
+            <button class="btn btn-blue" onclick="runRaffle()">ARVO VOITTAJA</button>
         </div>
-        <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+        <button class="btn btn-back" onclick="goHome()">← Alkuun</button>
     </div>
 
     <!-- SKANNERI-UI -->
     <div id="scanner-ui" class="hidden" style="width:100%">
         <div id="reader"></div>
-        <button class="btn btn-blue" onclick="stopScanner()">Peruuta skannaus</button>
+        <button class="btn btn-blue" onclick="stopScanner()">Peruuta</button>
     </div>
 
-    <!-- BINGO TULOKSET -->
+    <!-- TULOKSET -->
     <div id="step-results" class="hidden" style="width: 100%;">
         <div class="card">
-            <h2 id="res-total" style="color:var(--success); margin:0;">0 Riviä Valmiina!</h2>
-            <div id="res-breakdown" style="margin: 10px 0; font-weight:bold; color:#555;"></div>
+            <div id="genuine-status" class="status-banner">TARKISTETAAN...</div>
+            <div class="breakdown" id="res-breakdown"></div>
             <div id="bingo-grid" class="bingo-grid"></div>
-            <button class="btn btn-blue" onclick="retryCard()">Tarkista toinen lappu</button>
-            <button class="btn btn-back" onclick="goHome()">← Takaisin etusivulle</button>
+            <button class="btn btn-blue" onclick="retryCard()">Tarkista seuraava lappu</button>
+            <button class="btn btn-back" onclick="goHome()">← Alkuun</button>
         </div>
     </div>
 </div>
@@ -103,6 +117,7 @@
     let scanner = null;
     let calledNumbers = [];
     let gameMode = '';
+    let targetLines = 1;
     let currentTarget = '';
     let participants = [];
 
@@ -112,16 +127,18 @@
         if (m === 'raffle') {
             document.getElementById('step-raffle').classList.remove('hidden');
         } else {
-            document.getElementById('step-tv').classList.remove('hidden');
+            document.getElementById('step-lines').classList.remove('hidden');
         }
     }
 
-    function goHome() {
-        if (confirm("Haluatko varmasti palata etusivulle? Kaikki nykyiset tiedot nollataan.")) {
-            location.reload();
-        }
+    function setLines(n) {
+        targetLines = n;
+        document.getElementById('target-display').innerText = n;
+        document.getElementById('step-lines').classList.add('hidden');
+        document.getElementById('step-tv').classList.remove('hidden');
     }
 
+    function goHome() { location.reload(); }
     function retryCard() {
         document.getElementById('step-results').classList.add('hidden');
         document.getElementById('step-card').classList.remove('hidden');
@@ -129,45 +146,28 @@
 
     async function startScanner(target) {
         currentTarget = target;
-        // Piilotetaan kaikki kortit skannauksen ajaksi
         document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
         document.getElementById('scanner-ui').classList.remove('hidden');
 
         if (!scanner) scanner = new Html5Qrcode("reader");
-        
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
         scanner.start({ facingMode: "environment" }, config, onScanSuccess)
-        .catch(() => { 
-            alert("Kamera ei aukea. Tarkista luvat."); 
-            stopScanner(); 
-        });
+        .catch(() => { alert("Kamera-ongelma."); stopScanner(); });
     }
 
     function onScanSuccess(text) {
         if (currentTarget === 'raffle') {
             const match = text.match(/\d{6}/);
             if (match) {
-                const code = match[0];
-                if (!participants.includes(code)) {
-                    participants.push(code);
-                    updateRaffleUI();
-                } else {
-                    alert("Tämä koodi on jo mukana!");
-                }
-                stopScanner();
-            } else {
-                alert("Koodi ei ole 6-numeroinen luku.");
-                stopScanner();
+                if (!participants.includes(match[0])) participants.push(match[0]);
+                updateRaffleUI();
             }
+            stopScanner();
         } else if (currentTarget === 'tv') {
             calledNumbers = (text.match(/\d+/g) || []).map(Number);
             stopScanner();
-            if (calledNumbers.length > 0) {
-                document.getElementById('step-card').classList.remove('hidden');
-            } else {
-                alert("Koodista ei löytynyt numeroita.");
-                document.getElementById('step-tv').classList.remove('hidden');
-            }
+            if (calledNumbers.length > 0) document.getElementById('step-card').classList.remove('hidden');
         } else if (currentTarget === 'card') {
             stopScanner();
             parseBingoCard(text);
@@ -177,49 +177,11 @@
     function stopScanner() {
         if (scanner) scanner.stop().catch(() => {});
         document.getElementById('scanner-ui').classList.add('hidden');
-        
-        // Palautetaan oikea näkymä
-        if (gameMode === 'raffle') {
-            document.getElementById('step-raffle').classList.remove('hidden');
-        } else if (calledNumbers.length === 0) {
-            document.getElementById('step-tv').classList.remove('hidden');
-        } else {
-            document.getElementById('step-card').classList.remove('hidden');
-        }
+        if (gameMode === 'raffle') document.getElementById('step-raffle').classList.remove('hidden');
+        else if (calledNumbers.length === 0) document.getElementById('step-tv').classList.remove('hidden');
+        else document.getElementById('step-card').classList.remove('hidden');
     }
 
-    /* ARVONTA */
-    function updateRaffleUI() {
-        document.getElementById('raffle-container').classList.remove('hidden');
-        document.getElementById('participant-list').innerHTML = participants.map(p => `• ${p}`).join('<br>');
-        document.getElementById('participant-count').innerText = participants.length;
-        document.getElementById('winner-box').style.display = 'none';
-    }
-
-    function runRaffle() {
-        if (participants.length === 0) return;
-        const btn = document.getElementById('draw-btn');
-        const box = document.getElementById('winner-box');
-        btn.disabled = true;
-        box.style.display = 'block';
-        box.classList.add('rolling');
-
-        let counter = 0;
-        const interval = setInterval(() => {
-            box.innerText = participants[Math.floor(Math.random() * participants.length)];
-            counter++;
-            if (counter > 25) {
-                clearInterval(interval);
-                const winner = participants[Math.floor(Math.random() * participants.length)];
-                box.innerText = "VOITTAJA:\n" + winner;
-                box.classList.remove('rolling');
-                btn.disabled = false;
-                btn.innerText = "ARVO UUSI VOITTAJA";
-            }
-        }, 100);
-    }
-
-    /* BINGO */
     function parseBingoCard(text) {
         const letters = ['B', 'I', 'N', 'G', 'O'];
         const columns = {};
@@ -240,6 +202,7 @@
         const rowsCount = gameMode === 'pieni' ? 5 : 15;
         let board = [];
 
+        // Rakennetaan ruudukko
         for (let r = 0; r < rowsCount; r++) {
             if (gameMode === 'iso' && r > 0 && r % 5 === 0) {
                 const spacer = document.createElement('div'); spacer.className = 'spacer';
@@ -260,17 +223,48 @@
             board.push(rowMatched);
         }
 
-        let fullRows = board.filter(row => row.length === 5 && row.every(c => c === true)).length;
-        document.getElementById('res-total').innerText = fullRows + (fullRows === 1 ? " Rivi Valmiina!" : " Riviä Valmiina!");
-        
+        // --- TARKISTUS-LOGIIKKA ---
+        let isGenuine = false;
+        let breakdownHTML = "";
+
         if (gameMode === 'iso') {
-            let r1 = board.slice(0,5).filter(row => row.every(c => c === true)).length;
-            let r2 = board.slice(5,10).filter(row => row.every(c => c === true)).length;
-            let r3 = board.slice(10,15).filter(row => row.every(c => c === true)).length;
-            document.getElementById('res-breakdown').innerHTML = `Ylä: ${r1} | Keski: ${r2} | Ala: ${r3}`;
+            const s1 = board.slice(0,5).filter(row => row.every(c => c)).length;
+            const s2 = board.slice(5,10).filter(row => row.every(c => c)).length;
+            const s3 = board.slice(10,15).filter(row => row.every(c => c)).length;
+
+            if (s1 >= targetLines || s2 >= targetLines || s3 >= targetLines) isGenuine = true;
+            breakdownHTML = `Haettu määrä: ${targetLines} riviä<br>Ylä: ${s1} | Keski: ${s2} | Ala: ${s3}`;
         } else {
-            document.getElementById('res-breakdown').innerHTML = "5x5 Perusruudukko";
+            const count = board.filter(row => row.every(c => c)).length;
+            if (count >= targetLines) isGenuine = true;
+            breakdownHTML = `Haettu määrä: ${targetLines} riviä<br>Löytynyt: ${count} riviä`;
         }
+
+        const statusBanner = document.getElementById('genuine-status');
+        if (isGenuine) {
+            statusBanner.innerText = "✅ BINGO ON AITO!";
+            statusBanner.className = "status-banner status-genuine";
+        } else {
+            statusBanner.innerText = "❌ EI BINGOA VIELÄ";
+            statusBanner.className = "status-banner status-invalid";
+        }
+        document.getElementById('res-breakdown').innerHTML = breakdownHTML;
+    }
+
+    function updateRaffleUI() {
+        document.getElementById('raffle-container').classList.remove('hidden');
+        document.getElementById('participant-list').innerText = participants.join(", ");
+        document.getElementById('winner-box').style.display = 'none';
+    }
+
+    function runRaffle() {
+        if (participants.length === 0) return;
+        const box = document.getElementById('winner-box');
+        box.style.display = 'block';
+        box.innerText = "Arvotaan...";
+        setTimeout(() => {
+            box.innerText = "VOITTAJA: " + participants[Math.floor(Math.random() * participants.length)];
+        }, 1500);
     }
 </script>
 </body>
