@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BingoMaster - Yksi kamera kerrallaan</title>
+    <title>BingoMaster - Korjattu lapun jäsennys</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         * {
@@ -90,11 +90,6 @@
         button.secondary {
             background: #8b6b3d;
         }
-        button.active-scan {
-            background: #f5b042;
-            color: #1e3a2f;
-            box-shadow: 0 0 0 2px #ffdd99;
-        }
         .scan-selector {
             display: flex;
             gap: 1rem;
@@ -161,12 +156,12 @@
             background: #d9b48b;
             padding: 12px;
             font-size: 1.2rem;
-            width: 60px;
+            width: 65px;
         }
         td {
             border: 2px solid #f3cf93;
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             text-align: center;
             font-size: 1rem;
             font-weight: bold;
@@ -239,8 +234,14 @@
             max-height: 150px;
             overflow-y: auto;
         }
+        .debug-info {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.3rem;
+            word-break: break-all;
+        }
         @media (max-width: 780px) {
-            td, th { width: 42px; height: 42px; font-size: 0.8rem; }
+            td, th { width: 45px; height: 45px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -272,22 +273,20 @@
     </div>
 
     <div id="bingoSection">
-        <!-- Skannausvalinta: TV vai lappu -->
         <div class="scan-selector">
             <button id="selectTvScan" class="scan-btn active">📺 1. SKANNAA TV (huudetut numerot)</button>
             <button id="selectTicketScan" class="scan-btn">🎫 2. SKANNAA BINGOLAPPU</button>
         </div>
 
-        <!-- Kameranäkymä -->
         <div class="video-container">
             <video id="scannerVideo" autoplay playsinline muted></video>
-            <div class="scan-overlay" id="scanOverlay">📷 Valitse skannattava kohde ylhäältä</div>
+            <div class="scan-overlay" id="scanOverlay">📷 Valitse skannattava kohde</div>
         </div>
         <button id="restartCameraBtn" class="secondary" style="width:100%; margin-bottom:0.5rem;">🔄 Käynnistä kamera uudelleen</button>
         
         <div id="scanStatus" class="status-badge status-info">⏳ Odottaa skannausta...</div>
+        <div id="debugInfo" class="debug-info"></div>
         
-        <!-- TV:lle manuaalinen syöttö -->
         <div id="manualNumbersDiv" class="manual-numbers">
             <div style="font-size:0.7rem; font-weight:bold;">✏️ Tai syötä TV:n numerot käsin:</div>
             <div class="manual-input">
@@ -328,11 +327,9 @@
     let tvNumbers = new Set();
     let currentGrids = [];
     let targetRows = 2;
-    
-    // Skannaus: "tv" tai "ticket"
     let activeScan = "tv";
     
-    // Kamera ja skannaus
+    // Kamera
     let currentStream = null;
     let animationId = null;
     let lastScannedData = "";
@@ -353,6 +350,7 @@
     const dynamicBoard = document.getElementById('dynamicBoard');
     const verdictBox = document.getElementById('verdictBox');
     const scanStatus = document.getElementById('scanStatus');
+    const debugInfo = document.getElementById('debugInfo');
     const tvPreview = document.getElementById('tvPreview');
     const manualNumbersInput = document.getElementById('manualNumbersInput');
     const setManualNumbersBtn = document.getElementById('setManualNumbersBtn');
@@ -374,6 +372,100 @@
         return [...new Set(matches.map(Number))];
     }
     
+    // ----- PARANNELTU LAPUN PARSERI -----
+    // Tukee formaatteja: "B:2,5,8,11,14 I:16,19,22,25,28 N:31,34,37,40,43 G:46,49,52,55,58 O:61,64,67,70,73"
+    // Tai "B 2 5 8 11 14 I 16 19 22 25 28" jne. Tunnistaa myös 'T' jokerina
+    function parseTicketQR(text) {
+        debugInfo.innerHTML = "Raaka teksti: " + text.substring(0, 150) + "...";
+        
+        let upperText = text.toUpperCase();
+        let letters = ['B', 'I', 'N', 'G', 'O'];
+        let allRows = []; // 5 riviä x 5 saraketta
+        
+        // Alustetaan 5x5 taulukko
+        for (let i = 0; i < 5; i++) {
+            allRows.push([null, null, null, null, null]);
+        }
+        
+        // Etsi jokainen sarake (B, I, N, G, O)
+        for (let col = 0; col < letters.length; col++) {
+            let letter = letters[col];
+            // Etsi kuvioita kuten "B:2,5,8,11,14" tai "B 2 5 8 11 14" tai "B2,5,8,11,14"
+            let patterns = [
+                new RegExp(`${letter}[\\s:;]*([\\dT, ]+)`, 'i'),
+                new RegExp(`${letter}(\\d[\\dT, ]+)`, 'i')
+            ];
+            
+            let numbersStr = null;
+            for (let pattern of patterns) {
+                let match = upperText.match(pattern);
+                if (match) {
+                    numbersStr = match[1];
+                    break;
+                }
+            }
+            
+            if (numbersStr) {
+                // Jaa numerot pilkuilla, välilyönneillä, puolipisteillä
+                let parts = numbersStr.split(/[ ,;]+/);
+                // Ota ensimmäiset 5 numeroa (tai T)
+                for (let row = 0; row < 5 && row < parts.length; row++) {
+                    let val = parts[row].trim().toUpperCase();
+                    if (val === 'T' || val === '★' || val === 'STAR' || val === '*') {
+                        allRows[row][col] = { value: 0, isJoker: true };
+                    } else {
+                        let num = parseInt(val, 10);
+                        if (!isNaN(num) && num >= 1 && num <= 75) {
+                            allRows[row][col] = { value: num, isJoker: false };
+                        } else {
+                            // Jos arvo ei kelpaa, käytä oletusarvoa
+                            allRows[row][col] = { value: (row * 5 + col + 1 + col * 10) % 75 + 1, isJoker: false };
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Tarkista että kaikki solut on täytetty, täytä tyhjät oletuksella
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) {
+                if (allRows[r][c] === null) {
+                    allRows[r][c] = { value: (r * 5 + c + 1 + c * 7) % 75 + 1, isJoker: false };
+                }
+            }
+        }
+        
+        // Luo ruudukko (transponoi, koska allRows on rivi x sarake, mutta bingossa B sarake on pystyrivi)
+        // Bingossa B-sarake on ensimmäinen sarake (pystysuora), I toinen jne.
+        // Meillä on allRows[rivi][sarake], se on oikein: rivi 0-4, sarake 0-4 (B,I,N,G,O)
+        let grid = allRows; // Tämä on jo oikeassa muodossa
+        
+        // Debug: näytä ensimmäinen rivi
+        let firstRowStr = grid[0].map(c => c.isJoker ? "T" : c.value).join(", ");
+        debugInfo.innerHTML += `<br>📋 Jäsennelty: rivi0: ${firstRowStr}`;
+        
+        if (currentMode === 'big') {
+            // Isoa bingoa varten tarvitaan 3 ruudukkoa. Jos vain yksi, kopioidaan
+            let blocks = [grid];
+            while (blocks.length < 3) blocks.push(generateDummyGrid());
+            return blocks;
+        } else {
+            return [grid];
+        }
+    }
+    
+    function generateDummyGrid() {
+        let grid = [];
+        for (let i = 0; i < 5; i++) {
+            let row = [];
+            for (let j = 0; j < 5; j++) {
+                row.push({ value: (i * 5 + j + 1 + j * 8) % 75 + 1, isJoker: (i === 2 && j === 2) });
+            }
+            grid.push(row);
+        }
+        return grid;
+    }
+    
     // TV-skannaus
     function processTvScan(decodedText) {
         if (lastScannedData === decodedText) return;
@@ -390,97 +482,41 @@
         scanStatus.className = "status-badge status-success";
         updateTvPreview();
         calculateAndRender();
-        // Värähdys
         scanOverlay.style.backgroundColor = "rgba(46,125,50,0.8)";
         setTimeout(() => { scanOverlay.style.backgroundColor = "rgba(0,0,0,0.7)"; }, 300);
     }
     
-    // Bingolapun jäsennys
-    function parseTicketQR(text) {
-        let upper = text.toUpperCase();
-        let allBlocks = [];
-        let blockPattern = /(?:B[:\s;]*[\dT, ]+)(?:I[:\s;]*[\dT, ]+)(?:N[:\s;]*[\dT, ]+)(?:G[:\s;]*[\dT, ]+)(?:O[:\s;]*[\dT, ]+)/gi;
-        let matches = [...upper.matchAll(blockPattern)];
-        
-        if (matches.length >= 3 && currentMode === 'big') {
-            for (let i=0; i<3 && i<matches.length; i++) {
-                let grid = parseBlock(matches[i][0]);
-                if (grid) allBlocks.push(grid);
-            }
-        } else if (matches.length > 0) {
-            let grid = parseBlock(matches[0][0]);
-            if (grid) allBlocks.push(grid);
-        }
-        
-        if (allBlocks.length === 0) allBlocks = [generateDummyGrid()];
-        if (currentMode === 'big' && allBlocks.length === 1) {
-            while(allBlocks.length < 3) allBlocks.push(generateDummyGrid());
-        }
-        if (currentMode === 'small' && allBlocks.length > 1) allBlocks = [allBlocks[0]];
-        return allBlocks;
-    }
-    
-    function parseBlock(blockText) {
-        let grid = Array(5).fill().map(()=>Array(5).fill(null));
-        let letters = ['B','I','N','G','O'];
-        for (let col=0; col<letters.length; col++) {
-            let regex = new RegExp(`${letters[col]}[\\s:;]*([\\dT, ]+)`, 'i');
-            let match = blockText.match(regex);
-            if (match) {
-                let values = match[1].split(/[ ,;]+/);
-                for (let row=0; row<5 && row<values.length; row++) {
-                    let val = values[row].trim().toUpperCase();
-                    if (val === 'T' || val === '★' || val === 'STAR' || val === '*') {
-                        grid[row][col] = { value: 0, isJoker: true };
-                    } else {
-                        let num = parseInt(val,10);
-                        if (!isNaN(num) && num>=1 && num<=75) {
-                            grid[row][col] = { value: num, isJoker: false };
-                        }
-                    }
-                }
-            }
-        }
-        for (let r=0;r<5;r++) {
-            for(let c=0;c<5;c++) {
-                if (!grid[r][c]) grid[r][c] = { value: (r*5+c+1+(c*7))%75+1, isJoker: false };
-            }
-        }
-        return grid;
-    }
-    
-    function generateDummyGrid() {
-        let grid = [];
-        for(let i=0;i<5;i++) {
-            let row=[];
-            for(let j=0;j<5;j++) {
-                row.push({ value: (i*5+j+1)%75+1, isJoker: (i===2 && j===2) });
-            }
-            grid.push(row);
-        }
-        return grid;
-    }
-    
+    // Lapun skannaus uudella parserilla
     function processTicketScan(decodedText) {
         if (lastScannedData === decodedText) return;
         lastScannedData = decodedText;
+        debugInfo.innerHTML = `QR luettu: ${decodedText.substring(0, 200)}`;
+        
         let parsed = parseTicketQR(decodedText);
-        if (!parsed || parsed.length===0) {
+        if (!parsed || parsed.length === 0) {
             scanStatus.innerHTML = "❌ Virheellinen bingolapun QR-koodi";
             scanStatus.className = "status-badge status-warning";
             return;
         }
+        
         currentGrids = parsed;
-        scanStatus.innerHTML = `✅ Lappu skannattu! ${currentGrids.length} ruudukkoa ladattu`;
+        let gridCount = currentGrids.length;
+        scanStatus.innerHTML = `✅ Lappu skannattu! ${gridCount} ruudukkoa ladattu`;
         scanStatus.className = "status-badge status-success";
+        
+        // Näytä ensimmäisen ruudukon sisältö debugina
+        if (currentGrids[0]) {
+            let sample = currentGrids[0].slice(0, 2).map(row => row.map(c => c.isJoker ? "T" : c.value).join(",")).join(" | ");
+            debugInfo.innerHTML += `<br>📊 Ruudukko rivi0-1: ${sample}`;
+        }
+        
         scanOverlay.style.backgroundColor = "rgba(46,125,50,0.8)";
         setTimeout(() => { scanOverlay.style.backgroundColor = "rgba(0,0,0,0.7)"; }, 300);
         calculateAndRender();
     }
     
-    // Kameran skannausloop (käyttää jsQR:ää)
+    // Kameran skannausloop
     async function startScanner() {
-        // Pysäytä edellinen
         if (currentStream) {
             currentStream.getTracks().forEach(track => track.stop());
         }
@@ -543,7 +579,6 @@
         if (video) video.srcObject = null;
     }
     
-    // Skannauskohteen vaihto
     function setActiveScan(scanType) {
         activeScan = scanType;
         if (scanType === "tv") {
@@ -557,12 +592,10 @@
             manualNumbersDiv.style.display = "none";
             scanOverlay.innerHTML = "🎫 Skannaa bingolapun QR-koodi";
         }
-        // Käynnistä kamera uudelleen uudella asetuksella
         stopScanner();
         setTimeout(() => startScanner(), 100);
     }
     
-    // Manuaalinen numeroiden asetus (vain TV:lle)
     function setManualNumbers() {
         let raw = manualNumbersInput.value;
         if (!raw.trim()) return;
@@ -579,7 +612,7 @@
     // Laskenta ja renderöinti
     function calculateAndRender() {
         if (!currentGrids || currentGrids.length === 0) {
-            dynamicBoard.innerHTML = '<div style="text-align:center;">🎫 Skannaa bingolappu (vaihe 2)</div>';
+            dynamicBoard.innerHTML = '<div style="text-align:center;">🎫 Skannaa bingolappu ensin (vaihe 2)</div>';
             verdictBox.innerHTML = "📋 Odotetaan bingolapun skannausta";
             return;
         }
@@ -600,8 +633,11 @@
                 let rowFull = true;
                 for (let c=0; c<5; c++) {
                     let cell = grid[r][c];
-                    if (cell.isJoker) hits[r][c] = true;
-                    else if (tvNumbers.has(cell.value)) hits[r][c] = true;
+                    if (cell.isJoker) {
+                        hits[r][c] = true;
+                    } else if (tvNumbers.has(cell.value)) {
+                        hits[r][c] = true;
+                    }
                     if (!hits[r][c]) rowFull = false;
                 }
                 if (rowFull) fullRows++;
@@ -611,15 +647,14 @@
         }
         
         let target = targetRows;
-        let isBingo = false;
         let verdictHtml = "";
         if (currentMode === 'small') {
             let total = rowsPerGrid[0] || 0;
-            isBingo = (total >= target);
+            let isBingo = (total >= target);
             verdictHtml = isBingo ? "🏆 BINGO ON AITO! 🏆" : `❌ EI BINGOA VIELÄ (${total}/${target} riviä)`;
         } else {
             let best = Math.max(...rowsPerGrid);
-            isBingo = (best >= target);
+            let isBingo = (best >= target);
             verdictHtml = isBingo ? "🏆 BINGO ON AITO! 🏆" : `❌ EI BINGOA VIELÄ (Paras lohko: ${best}/${target} riviä)`;
             verdictHtml += `<br><small>📊 Ylä:${rowsPerGrid[0] || 0} | Keski:${rowsPerGrid[1] || 0} | Ala:${rowsPerGrid[2] || 0}</small>`;
         }
@@ -638,7 +673,7 @@
                 let titles = ['🔷 YLÄRUUDUKKO', '🔶 KESKIRUUDUKKO', '🔴 ALARUUDUKKO'];
                 html += `<h4 style="margin:1rem 0 0.3rem 0;">${titles[g]}</h4>`;
             }
-            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</thead><tbody>`;
+            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
             for (let r=0; r<5; r++) {
                 html += `<tr>`;
                 for (let c=0; c<5; c++) {
@@ -649,7 +684,7 @@
                 }
                 html += `</tr>`;
             }
-            html += `</tbody>}</table>`;
+            html += `</tbody></table>`;
         }
         dynamicBoard.innerHTML = html;
     }
@@ -661,7 +696,7 @@
                 let titles = ['🔷 YLÄRUUDUKKO', '🔶 KESKIRUUDUKKO', '🔴 ALARUUDUKKO'];
                 html += `<h4 style="margin:1rem 0 0.3rem 0;">${titles[g]}</h4>`;
             }
-            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</thead><tbody>`;
+            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
             let grid = grids[g];
             let hits = hitsMatrices[g];
             for (let r=0; r<5; r++) {
@@ -680,7 +715,7 @@
                 }
                 html += `</tr>`;
             }
-            html += `</tbody>}</table>`;
+            html += `</tbody></table>`;
         }
         dynamicBoard.innerHTML = html;
     }
@@ -741,7 +776,6 @@
     
     function clearParticipants() { participantsSet.clear(); updateParticipantList(); document.getElementById('winnerResult').innerHTML = ""; }
     
-    // Modejen vaihto
     function switchMode(mode) {
         currentMode = mode;
         modeSmallBtn.classList.remove('active');
@@ -763,11 +797,12 @@
             settingsPanel.style.display = 'flex';
             if (extraStream) { extraStream.getTracks().forEach(t=>t.stop()); extraStream=null; }
             if (extraAnimationId) cancelAnimationFrame(extraAnimationId);
-            // Aloita bingoskannaus
             setActiveScan(activeScan);
         }
         bigNote.style.display = (mode === 'big') ? 'flex' : 'none';
         targetRowsSelect.disabled = (mode === 'extra');
+        currentGrids = [];
+        calculateAndRender();
     }
     
     // Eventit
