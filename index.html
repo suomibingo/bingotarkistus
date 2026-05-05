@@ -34,26 +34,14 @@
     color: var(--text);
     font-family: 'Barlow', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 20% 20%, rgba(240,192,64,0.04) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 80%, rgba(224,90,43,0.04) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
   }
 
   .app {
-    position: relative;
-    z-index: 1;
     max-width: 820px;
     margin: 0 auto;
     padding: 20px 16px 60px;
+    position: relative;
+    z-index: 1;
   }
 
   header {
@@ -76,16 +64,12 @@
     font-family: 'Bebas Neue', sans-serif;
     font-size: 22px;
     color: var(--bg);
-    flex-shrink: 0;
-    letter-spacing: 1px;
   }
 
   h1 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 2.2rem;
     letter-spacing: 3px;
-    color: var(--text);
-    line-height: 1;
   }
 
   h1 span { color: var(--accent); }
@@ -104,16 +88,11 @@
     background: var(--surface);
     color: var(--text-dim);
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
     font-weight: 600;
-    letter-spacing: 1px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
   }
 
-  .mode-tab:hover { border-color: var(--accent); color: var(--text); }
   .mode-tab.active {
     border-color: var(--accent);
     background: rgba(240,192,64,0.1);
@@ -131,105 +110,19 @@
 
   .section.visible { display: block; }
 
-  .section-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
-
-  .step-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .step-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--bg);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .step-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text);
-  }
-
-  .setting-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-
-  .setting-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    min-width: 130px;
-  }
-
-  .pill-group {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .pill {
-    padding: 6px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 99px;
-    background: transparent;
-    color: var(--text-dim);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.18s;
-  }
-
-  .pill:hover { border-color: var(--accent); color: var(--text); }
-  .pill.active { border-color: var(--accent); background: rgba(240,192,64,0.12); color: var(--accent); }
-
   .scanner-area {
     position: relative;
     width: 100%;
     aspect-ratio: 4/3;
-    max-height: 320px;
     background: #000;
     border-radius: var(--radius);
     overflow: hidden;
-    margin-bottom: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .scanner-area video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  video { width: 100%; height: 100%; object-fit: cover; }
 
   .scanner-overlay {
     position: absolute;
@@ -243,443 +136,91 @@
   .scan-frame {
     width: 200px;
     height: 200px;
+    border: 2px solid rgba(240,192,64,0.3);
     position: relative;
   }
 
-  .scan-frame::before, .scan-frame::after,
-  .scan-frame > span::before, .scan-frame > span::after {
-    content: '';
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    border-color: var(--accent);
-    border-style: solid;
+  .scan-frame.found {
+    border-color: var(--green);
+    background: rgba(46, 204, 113, 0.2);
   }
-
-  .scan-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
-  .scan-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
-  .scan-frame > span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
-  .scan-frame > span::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
 
   .scan-line {
     position: absolute;
-    top: 0;
-    left: 4px;
-    right: 4px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: scan 2s ease-in-out infinite;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent);
+    animation: scan 2s linear infinite;
   }
 
   @keyframes scan {
-    0% { top: 4px; opacity: 1; }
-    100% { top: calc(100% - 4px); opacity: 0.3; }
-  }
-
-  .scanner-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-dim);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  .scanner-icon {
-    font-size: 3rem;
-    opacity: 0.4;
+    0% { top: 0; }
+    100% { top: 100%; }
   }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 22px;
+    padding: 12px 24px;
     border-radius: var(--radius);
     border: none;
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.18s;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: var(--bg);
-  }
-
-  .btn-primary:hover { background: #f5d070; transform: translateY(-1px); }
-
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1.5px solid var(--border);
-  }
-
-  .btn-secondary:hover { border-color: var(--accent); }
-
-  .btn-danger {
-    background: rgba(231,76,60,0.15);
-    color: var(--red);
-    border: 1.5px solid rgba(231,76,60,0.3);
-  }
-
-  .btn-danger:hover { background: rgba(231,76,60,0.25); }
-
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
     margin-top: 10px;
   }
 
-  .status-ok {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(46,204,113,0.12);
-    border: 1px solid rgba(46,204,113,0.3);
-    color: var(--green);
-    border-radius: var(--radius);
-    padding: 6px 14px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-
-  .status-error {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(231,76,60,0.12);
-    border: 1px solid rgba(231,76,60,0.3);
-    color: var(--red);
-    border-radius: var(--radius);
-    padding: 6px 14px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-
-  .info-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    margin-top: 10px;
-    line-height: 1.5;
-  }
-
-  .info-box strong { color: var(--accent); }
-
-  .number-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 8px;
-  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
   .chip {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
+    padding: 5px 10px;
     background: var(--surface2);
     border: 1px solid var(--border);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
+    border-radius: 4px;
+    margin: 2px;
     color: var(--accent);
-    letter-spacing: 0;
   }
 
   .verdict {
     text-align: center;
-    padding: 18px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    letter-spacing: 4px;
-  }
-
-  .verdict.win {
-    background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.05));
-    border: 2px solid rgba(46,204,113,0.4);
-    color: var(--green);
-    animation: pulse-win 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse-win {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.2); }
-    50% { box-shadow: 0 0 0 12px rgba(46,204,113,0); }
-  }
-
-  .verdict.loss {
-    background: rgba(231,76,60,0.08);
-    border: 2px solid rgba(231,76,60,0.25);
-    color: var(--red);
-  }
-
-  .grid-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    text-align: center;
-    margin-bottom: 8px;
-    margin-top: 16px;
-  }
-
-  .bingo-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    position: relative;
-    margin-bottom: 8px;
-  }
-
-  .grid-cell {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    background: var(--miss);
-    border: 1.5px solid var(--border);
-    color: var(--text-dim);
-    position: relative;
-    transition: all 0.3s;
-  }
-
-  .grid-cell.hit {
-    background: rgba(240,192,64,0.15);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .grid-cell.hit::after {
-    content: '';
-    position: absolute;
-    inset: 4px;
-    border: 2.5px solid var(--accent);
-    border-radius: 50%;
-    opacity: 0.7;
-  }
-
-  .grid-cell.star {
-    background: rgba(240,192,64,0.2);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-size: 1.3rem;
-  }
-
-  .row-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 4px;
-    background: var(--bingo-line);
-    border-radius: 2px;
-    opacity: 0.85;
-    pointer-events: none;
-    z-index: 10;
-    animation: lineIn 0.4s ease-out;
-  }
-
-  @keyframes lineIn {
-    from { scaleX: 0; opacity: 0; }
-    to { scaleX: 1; opacity: 0.85; }
-  }
-
-  .col-headers {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  .col-header {
-    text-align: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.3rem;
-    color: var(--accent);
-    letter-spacing: 2px;
-  }
-
-  .codes-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-    min-height: 40px;
-  }
-
-  .code-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: 1px;
-  }
-
-  .winner-box {
-    text-align: center;
-    padding: 24px;
-    background: linear-gradient(135deg, rgba(240,192,64,0.15), rgba(240,192,64,0.05));
-    border: 2px solid var(--accent);
-    border-radius: 12px;
-    margin-top: 16px;
-  }
-
-  .winner-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .winner-number {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 4rem;
-    color: var(--text);
-    letter-spacing: 6px;
-    animation: reveal 0.5s ease-out;
-  }
-
-  @keyframes reveal {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  .spinner {
+    padding: 20px;
     font-family: 'Bebas Neue', sans-serif;
     font-size: 2.5rem;
-    color: var(--accent);
-    letter-spacing: 6px;
-    animation: spin 0.08s linear infinite;
+    border-radius: 10px;
+    margin-bottom: 20px;
   }
+  .win { background: rgba(46,204,113,0.2); color: var(--green); border: 2px solid var(--green); }
+  .loss { background: rgba(231,76,60,0.2); color: var(--red); border: 2px solid var(--red); }
 
-  @keyframes spin {
-    from { opacity: 1; }
-    to { opacity: 0.4; }
-  }
+  .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+  .grid-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: var(--miss); border: 1px solid var(--border); border-radius: 4px; font-weight: 700; }
+  .grid-cell.hit { background: rgba(240,192,64,0.3); color: var(--accent); border-color: var(--accent); }
+  .grid-cell.star { color: var(--accent); font-size: 1.5rem; }
 
-  hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 18px 0;
-  }
-
-  .manual-input {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .manual-input input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    letter-spacing: 1px;
-    outline: none;
-  }
-
-  textarea.manual-input-area {
-    width: 100%;
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1rem;
-    resize: vertical;
-    min-height: 80px;
-    margin-top: 10px;
-  }
-
-  .scan-status {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    margin-top: 6px;
-  }
+  .row-wrapper { position: relative; margin-bottom: 5px; }
+  .row-line { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: var(--red); z-index: 5; border-radius: 2px; pointer-events: none; }
 
   .hidden { display: none !important; }
 
-  .steps-nav {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 20px;
-  }
-
-  .step-dot {
-    flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border);
-  }
-
-  .step-dot.done { background: var(--accent); }
-  .step-dot.active { background: rgba(240,192,64,0.5); }
-
-  @media (max-width: 480px) {
-    h1 { font-size: 1.7rem; }
-    .winner-number { font-size: 3rem; }
-  }
+  .steps-nav { display: flex; gap: 5px; margin-bottom: 20px; }
+  .step-dot { flex: 1; height: 5px; background: var(--border); border-radius: 2px; }
+  .step-dot.active { background: var(--accent); }
+  .step-dot.done { background: var(--green); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <div class="logo">B!</div>
-    <div>
-      <h1>BINGO <span>TARKISTUS</span></h1>
-      <div style="font-family:'Barlow Condensed';font-size:0.8rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;">QR-koodipohjainen tarkistusjärjestelmä</div>
-    </div>
+    <div><h1>BINGO <span>TARKISTUS</span></h1></div>
   </header>
 
   <div class="mode-tabs">
-    <button class="mode-tab active" onclick="setMode('pieni')">🎯 Pieni Bingo<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">5×5</span></button>
-    <button class="mode-tab" onclick="setMode('iso')">🚢 Iso Bingo<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">3 × 5×5</span></button>
-    <button class="mode-tab" onclick="setMode('arvonta')">🎲 Lisäarvonta<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">6-num koodit</span></button>
+    <button class="mode-tab active" id="tab-pieni" onclick="setMode('pieni')">🎯 Pieni</button>
+    <button class="mode-tab" id="tab-iso" onclick="setMode('iso')">🚢 Iso</button>
+    <button class="mode-tab" id="tab-arvonta" onclick="setMode('arvonta')">🎲 Arvonta</button>
   </div>
 
   <div id="bingo-flow">
@@ -691,319 +232,256 @@
     </div>
 
     <div class="section visible" id="step1">
-      <div class="step-badge"><div class="step-num">1</div><div class="step-label">Asetukset</div></div>
-      <div class="setting-row">
-        <div class="setting-label">Tavoiterivit</div>
-        <div class="pill-group" id="target-pills">
-          <button class="pill active" onclick="setTarget(1)">1 rivi</button>
-          <button class="pill" onclick="setTarget(2)">2 riviä</button>
-          <button class="pill" onclick="setTarget(3)">3 riviä</button>
-          <button class="pill" onclick="setTarget(4)">4 riviä</button>
-          <button class="pill" onclick="setTarget(5)">5 riviä</button>
-        </div>
+      <h3>1. Asetukset</h3>
+      <p>Kuinka monta riviä haetaan?</p>
+      <div class="btn-row" id="target-btns" style="margin: 15px 0;">
+        <button class="btn btn-secondary active" onclick="setTarget(1)">1</button>
+        <button class="btn btn-secondary" onclick="setTarget(2)">2</button>
+        <button class="btn btn-secondary" onclick="setTarget(3)">3</button>
+        <button class="btn btn-secondary" onclick="setTarget(4)">4</button>
+        <button class="btn btn-secondary" onclick="setTarget(5)">5</button>
       </div>
-      <div class="info-box" id="settings-info"></div>
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn btn-primary" onclick="goStep(2)">Seuraava → Skannaa TV</button>
-      </div>
+      <button class="btn btn-primary" onclick="goStep(2)">Seuraava →</button>
     </div>
 
     <div class="section" id="step2">
-      <div class="step-badge"><div class="step-num">2</div><div class="step-label">Skannaa TV</div></div>
-      <div class="scanner-area" id="scanner2-area">
-        <div id="scanner2-placeholder" class="scanner-placeholder"><div class="scanner-icon">📺</div></div>
-        <video id="video2" autoplay muted playsinline style="display:none"></video>
-        <div class="scanner-overlay" id="scan2-overlay" style="display:none">
-          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
-        </div>
+      <h3>2. Skannaa TV</h3>
+      <div class="scanner-area">
+        <video id="video2" playsinline></video>
+        <div class="scanner-overlay"><div class="scan-frame" id="frame2"><div class="scan-line"></div></div></div>
       </div>
-      <div class="scan-status" id="scan2-status">Ei skannattu</div>
+      <p id="status2">Odottaa kameraa...</p>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="startScan(2)">📷 Käynnistä kamera</button>
-        <button class="btn btn-secondary" onclick="stopScan(2)">⏹ Pysäytä</button>
+        <button class="btn btn-primary" onclick="startScan(2)">📷 Avaa kamera</button>
+        <button class="btn btn-secondary" onclick="stopScan(2)">⏹ Sulje</button>
       </div>
-      <hr>
-      <textarea class="manual-input-area" id="tv-manual" placeholder="Syötä huudetut numerot tähän..."></textarea>
-      <button class="btn btn-secondary" onclick="parseTVManual()">✓ Tallenna numerot</button>
-      <div id="tv-numbers-display" class="hidden" style="margin-top:14px">
-        <div class="section-title">Huudetut numerot (<span id="tv-count">0</span>)</div>
-        <div class="number-chips" id="tv-chips"></div>
+      <div id="tv-numbers-preview" class="hidden">
+        <p>Huudetut: <span id="count2">0</span> kpl</p>
+        <div id="chips2"></div>
       </div>
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn btn-secondary" onclick="goStep(1)">← Takaisin</button>
-        <button class="btn btn-primary" id="to-step3-btn" onclick="goStep(3)" disabled>Seuraava → Skannaa Lappu</button>
-      </div>
+      <button class="btn btn-secondary" onclick="goStep(1)" style="margin-top:20px">← Takaisin</button>
     </div>
 
     <div class="section" id="step3">
-      <div class="step-badge"><div class="step-num">3</div><div class="step-label">Skannaa Lappu</div></div>
-      <div class="scanner-area" id="scanner3-area">
-        <div id="scanner3-placeholder" class="scanner-placeholder"><div class="scanner-icon">🎟</div></div>
-        <video id="video3" autoplay muted playsinline style="display:none"></video>
-        <div class="scanner-overlay" id="scan3-overlay" style="display:none">
-          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
-        </div>
+      <h3>3. Skannaa Lappu</h3>
+      <div class="scanner-area">
+        <video id="video3" playsinline></video>
+        <div class="scanner-overlay"><div class="scan-frame" id="frame3"><div class="scan-line"></div></div></div>
       </div>
-      <div class="scan-status" id="scan3-status">Ei skannattu</div>
+      <p id="status3">Odottaa kameraa...</p>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="startScan(3)">📷 Käynnistä kamera</button>
-        <button class="btn btn-secondary" onclick="stopScan(3)">⏹ Pysäytä</button>
+        <button class="btn btn-primary" onclick="startScan(3)">📷 Avaa kamera</button>
+        <button class="btn btn-secondary" onclick="stopScan(3)">⏹ Sulje</button>
       </div>
-      <hr>
-      <textarea class="manual-input-area" id="ticket-manual" placeholder="Syötä lapun data tähän..."></textarea>
-      <button class="btn btn-secondary" onclick="parseTicketManual()">✓ Tallenna lappu</button>
-      <div class="btn-row" style="margin-top:16px">
-        <button class="btn btn-secondary" onclick="goStep(2)">← Takaisin</button>
-        <button class="btn btn-primary" id="to-step4-btn" onclick="checkBingo()" disabled>Tarkista Bingo!</button>
-      </div>
+      <button class="btn btn-secondary" onclick="goStep(2)" style="margin-top:20px">← Takaisin</button>
     </div>
 
     <div class="section" id="step4">
-      <div class="step-badge"><div class="step-num">4</div><div class="step-label">Tulokset</div></div>
-      <div id="bingo-results"></div>
-      <div class="btn-row" style="margin-top:20px">
-        <button class="btn btn-secondary" onclick="goStep(3)">← Uusi lappu</button>
-        <button class="btn btn-secondary" onclick="resetAll()">🔄 Aloita alusta</button>
-      </div>
+      <div id="results-container"></div>
+      <button class="btn btn-primary" onclick="goStep(3)">Skannaa uusi lappu</button>
+      <button class="btn btn-secondary" onclick="location.reload()">🔄 Aloita alusta</button>
     </div>
   </div>
 
   <div id="arvonta-flow" class="hidden">
     <div class="section visible">
-      <div class="step-badge"><div class="step-num">🎲</div><div class="step-label">Lisäarvonta</div></div>
-      <div class="scanner-area" id="scanner-arvonta-area">
-        <video id="video-arvonta" autoplay muted playsinline style="display:none"></video>
-        <div id="scanner-arvonta-placeholder" class="scanner-placeholder"><div class="scanner-icon">🎫</div></div>
-        <div class="scanner-overlay" id="scan-arvonta-overlay" style="display:none">
-          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
-        </div>
+      <h3>🎲 Lisäarvonta</h3>
+      <div class="scanner-area">
+        <video id="video-arvonta" playsinline></video>
+        <div class="scanner-overlay"><div class="scan-frame" id="frame-arvonta"><div class="scan-line"></div></div></div>
       </div>
-      <div class="scan-status" id="scan-arvonta-status">Ei skannattu</div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="startScan('arvonta')">📷 Kamera</button>
-        <button class="btn btn-secondary" onclick="stopScan('arvonta')">⏹ Pysäytä</button>
+        <button class="btn btn-primary" onclick="startScan('arvonta')">📷 Skannaa koodi</button>
       </div>
-      <div class="manual-input">
-        <input type="text" id="arvonta-manual-input" placeholder="Syötä koodi...">
-        <button class="btn btn-secondary" onclick="addArvontaCodeManual()">+ Lisää</button>
-      </div>
-      <div class="section-title" style="margin-top:10px">Osallistujat (<span id="arvonta-count">0</span>)</div>
-      <div class="codes-list" id="codes-list"></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="suoritaArvonta()" id="arvonta-btn">🎯 Arvo</button>
-        <button class="btn btn-danger" onclick="clearArvonta()">🗑 Tyhjennä</button>
-      </div>
+      <div id="participants" style="margin-top:15px">Osallistujia: 0</div>
+      <button class="btn btn-primary" onclick="runRaffle()" style="width:100%">🎯 SUORITA ARVONTA</button>
       <div id="winner-display"></div>
     </div>
   </div>
 </div>
 
 <script>
-let currentMode = 'pieni';
-let targetRows = 1;
-let calledNumbers = new Set();
-let ticketGrids = [];
-let scanStreams = {};
-let scanActive = {};
+let state = {
+  mode: 'pieni',
+  target: 1,
+  called: new Set(),
+  grids: [],
+  participants: new Set(),
+  scanning: false
+};
 
-function setMode(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.mode-tab').forEach((t,i) => {
-    t.classList.toggle('active', ['pieni','iso','arvonta'][i] === mode);
-  });
-  document.getElementById('bingo-flow').classList.toggle('hidden', mode === 'arvonta');
-  document.getElementById('arvonta-flow').classList.toggle('hidden', mode !== 'arvonta');
-  updateSettingsInfo();
-  if(mode !== 'arvonta') goStep(1);
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.id === 'tab-'+m));
+  document.getElementById('bingo-flow').classList.toggle('hidden', m === 'arvonta');
+  document.getElementById('arvonta-flow').classList.toggle('hidden', m !== 'arvonta');
+  goStep(1);
 }
 
 function setTarget(n) {
-  targetRows = n;
-  document.querySelectorAll('#target-pills .pill').forEach((p,i) => p.classList.toggle('active', i === n-1));
-  updateSettingsInfo();
-}
-
-function updateSettingsInfo() {
-  const mName = currentMode === 'iso' ? 'Iso Bingo' : 'Pieni Bingo';
-  document.getElementById('settings-info').innerHTML = `Pelimuoto: <strong>${mName}</strong>. Tavoite: <strong>${targetRows} riviä</strong> samassa ruudukossa.`;
+  state.target = n;
+  document.querySelectorAll('#target-btns .btn').forEach((b, i) => b.classList.toggle('active', i === n-1));
 }
 
 function goStep(n) {
-  [1,2,3,4].forEach(i => document.getElementById('step'+i).classList.toggle('visible', i === n));
+  stopAllScans();
   [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('visible', i === n);
     const dot = document.getElementById('dot'+i);
-    dot.className = 'step-dot' + (i<n?' done':(i===n?' active':''));
+    dot.className = 'step-dot' + (i<n ? ' done' : (i===n ? ' active' : ''));
   });
-  stopScan(2); stopScan(3);
-}
-
-function resetAll() {
-  calledNumbers.clear(); ticketGrids = [];
-  document.getElementById('tv-chips').innerHTML = '';
-  document.getElementById('tv-numbers-display').classList.add('hidden');
-  document.getElementById('to-step3-btn').disabled = true;
-  document.getElementById('to-step4-btn').disabled = true;
-  goStep(1);
 }
 
 // --- SCANNER ENGINE ---
 async function startScan(id) {
-  stopScan(id);
-  const idStr = id === 'arvonta' ? '-arvonta' : id;
-  const video = document.getElementById(`video${idStr}`);
-  const overlay = document.getElementById(`scan${idStr}-overlay`);
-  const placeholder = document.getElementById(`scanner${idStr}-placeholder`);
-  const status = document.getElementById(`scan${idStr}-status`);
+  stopAllScans();
+  state.scanning = true;
+  const video = document.getElementById(id === 'arvonta' ? 'video-arvonta' : 'video'+id);
+  const status = document.getElementById(id === 'arvonta' ? 'status-arvonta' : 'status'+id);
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    scanStreams[id] = stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment', width: 1280 } 
+    });
     video.srcObject = stream;
-    video.style.display = 'block';
-    overlay.style.display = 'flex';
-    placeholder.style.display = 'none';
-    status.textContent = 'Etsitään koodia...';
-    scanActive[id] = true;
-    requestAnimationFrame(() => scanFrame(id));
-  } catch(e) {
-    status.textContent = 'Kameravirhe: ' + e.message;
+    video.play();
+    requestAnimationFrame(() => scanLoop(id, video));
+  } catch (err) {
+    if(status) status.textContent = "Kamera-apu: Salli käyttö selaimessa.";
   }
 }
 
-function scanFrame(id) {
-  if (!scanActive[id]) return;
-  const idStr = id === 'arvonta' ? '-arvonta' : id;
-  const video = document.getElementById(`video${idStr}`);
-  
+function stopAllScans() {
+  state.scanning = false;
+  document.querySelectorAll('video').forEach(v => {
+    if(v.srcObject) {
+      v.srcObject.getTracks().forEach(t => t.stop());
+      v.srcObject = null;
+    }
+  });
+}
+
+function stopScan(id) { stopAllScans(); }
+
+function scanLoop(id, video) {
+  if (!state.scanning) return;
+
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imgData.data, imgData.width, imgData.height);
+
     if (code) {
-      onQR(id, code.data);
+      const frame = document.getElementById(id === 'arvonta' ? 'frame-arvonta' : 'frame'+id);
+      frame.classList.add('found');
+      setTimeout(() => {
+        onCodeFound(id, code.data);
+        frame.classList.remove('found');
+      }, 300);
       return;
     }
   }
-  requestAnimationFrame(() => scanFrame(id));
+  requestAnimationFrame(() => scanLoop(id, video));
 }
 
-function stopScan(id) {
-  scanActive[id] = false;
-  if (scanStreams[id]) {
-    scanStreams[id].getTracks().forEach(t => t.stop());
-    delete scanStreams[id];
+function onCodeFound(id, data) {
+  if (id === 2) {
+    const nums = data.match(/\d+/g);
+    if(nums) {
+      nums.forEach(n => state.called.add(parseInt(n)));
+      updateTVPreview();
+      goStep(3); // Automaattinen siirtyminen
+      startScan(3); // Avaa heti lapun skannaus
+    }
+  } else if (id === 3) {
+    processTicket(data);
+  } else if (id === 'arvonta') {
+    const code = data.match(/\d{4,10}/);
+    if(code) {
+      state.participants.add(code[0]);
+      document.getElementById('participants').textContent = "Osallistujia: " + state.participants.size;
+    }
   }
-  const idStr = id === 'arvonta' ? '-arvonta' : id;
-  const video = document.getElementById(`video${idStr}`);
-  if (video) { video.style.display = 'none'; video.srcObject = null; }
-  const overlay = document.getElementById(`scan${idStr}-overlay`);
-  if (overlay) overlay.style.display = 'none';
-  const placeholder = document.getElementById(`scanner${idStr}-placeholder`);
-  if (placeholder) placeholder.style.display = 'flex';
 }
 
-function onQR(id, data) {
-  stopScan(id);
-  if (id === 2) processTVData(data);
-  else if (id === 3) processTicketData(data);
-  else if (id === 'arvonta') processArvontaCode(data);
+function updateTVPreview() {
+  const sorted = [...state.called].sort((a,b) => a-b);
+  document.getElementById('count2').textContent = sorted.length;
+  document.getElementById('chips2').innerHTML = sorted.map(n => `<span class="chip">${n}</span>`).join('');
+  document.getElementById('tv-numbers-preview').classList.remove('hidden');
 }
 
-function processTVData(text) {
-  const nums = text.match(/\d+/g);
-  if (nums) nums.forEach(n => calledNumbers.add(parseInt(n)));
-  const sorted = [...calledNumbers].sort((a,b) => a-b);
-  document.getElementById('tv-chips').innerHTML = sorted.map(n => `<div class="chip">${n}</div>`).join('');
-  document.getElementById('tv-count').textContent = sorted.length;
-  document.getElementById('tv-numbers-display').classList.remove('hidden');
-  document.getElementById('to-step3-btn').disabled = false;
-}
-
-function parseTVManual() { processTVData(document.getElementById('tv-manual').value); }
-
-function processTicketData(text) {
-  ticketGrids = [];
+function processTicket(text) {
+  const grids = [];
   const parts = text.split(/\||\n\n/);
+  
   parts.forEach(p => {
     const grid = [];
     const regex = /([BINGO]):([^\s]+)/gi;
     let m;
     while ((m = regex.exec(p)) !== null) {
-      const nums = m[2].split(',').map(v => v.toUpperCase() === 'T' ? {v:'★',s:true} : {v:parseInt(v),s:false});
-      grid.push({col: m[1].toUpperCase(), nums});
+      const nums = m[2].split(',').map(v => 
+        v.toUpperCase() === 'T' ? {v:'★', s:true} : {v:parseInt(v), s:false}
+      );
+      grid.push({label: m[1].toUpperCase(), nums});
     }
-    if (grid.length === 5) ticketGrids.push(grid);
+    if(grid.length === 5) grids.push(grid);
   });
 
-  if (currentMode === 'iso' && ticketGrids.length === 1) ticketGrids.push([...ticketGrids[0]], [...ticketGrids[0]]);
-  if (ticketGrids.length > 0) {
-    document.getElementById('to-step4-btn').disabled = false;
-    document.getElementById('scan3-status').textContent = 'Lappu ladattu!';
+  if(grids.length > 0) {
+    state.grids = state.mode === 'iso' ? (grids.length === 1 ? [grids[0], grids[0], grids[0]] : grids.slice(0,3)) : [grids[0]];
+    showResults();
   }
 }
 
-function parseTicketManual() { processTicketData(document.getElementById('ticket-manual').value); }
-
-function checkBingo() {
+function showResults() {
+  stopAllScans();
   goStep(4);
   let html = '';
   let gridWins = [];
-  
-  ticketGrids.forEach((grid, gi) => {
-    const rows = [0,1,2,3,4].map(r => grid.every(c => c.nums[r].s || calledNumbers.has(c.nums[r].v)));
-    gridWins.push(rows.filter(Boolean).length);
-    
-    html += `<div class="grid-label">${currentMode==='iso'?['YLÄ','KESKI','ALA'][gi]:''}</div>`;
-    html += `<div class="col-headers">${grid.map(c => `<div class="col-header">${c.col}</div>`).join('')}</div>`;
-    
-    for (let r=0; r<5; r++) {
-      html += `<div class="bingo-row-wrapper"><div class="bingo-grid">`;
-      grid.forEach(c => {
-        const cell = c.nums[r];
-        const isHit = cell.s || calledNumbers.has(cell.v);
+
+  state.grids.forEach((grid, gi) => {
+    const rowResults = [0,1,2,3,4].map(r => grid.every(col => col.nums[r].s || state.called.has(col.nums[r].v)));
+    gridWins.push(rowResults.filter(Boolean).length);
+
+    html += `<div style="color:var(--accent); margin: 15px 0 5px; font-weight:700; letter-spacing:2px; text-align:center">${state.mode==='iso'?['YLÄRUUDUKKO','KESKIRUUDUKKO','ALARUUDUKKO'][gi]:''}</div>`;
+    html += `<div class="bingo-grid" style="grid-template-columns:repeat(5, 1fr); background:none; font-family:'Bebas Neue'">` + 
+            ['B','I','N','G','O'].map(l => `<div style="text-align:center; color:var(--accent)">${l}</div>`).join('') + `</div>`;
+
+    for(let r=0; r<5; r++) {
+      html += `<div class="row-wrapper"><div class="bingo-grid">`;
+      grid.forEach(col => {
+        const cell = col.nums[r];
+        const isHit = cell.s || state.called.has(cell.v);
         html += `<div class="grid-cell ${isHit?'hit':''} ${cell.s?'star':''}">${cell.v}</div>`;
       });
-      html += `</div>${rows[r]?'<div class="row-line"></div>':''}</div>`;
+      html += `</div>${rowResults[r] ? '<div class="row-line"></div>' : ''}</div>`;
     }
   });
 
-  const win = currentMode === 'pieni' ? gridWins[0] >= targetRows : gridWins.some(w => w >= targetRows);
-  document.getElementById('bingo-results').innerHTML = `<div class="verdict ${win?'win':'loss'}">${win?'BINGO!':'EI BINGOA'}</div>` + html;
+  const win = state.mode === 'pieni' ? gridWins[0] >= state.target : gridWins.some(w => w >= state.target);
+  const verdict = `<div class="verdict ${win?'win':'loss'}">${win?'BINGO ON AITO! 🎉':'EI VIELÄ BINGOA'}</div>`;
+  document.getElementById('results-container').innerHTML = verdict + html;
 }
 
-// --- ARVONTA ---
-let arvontaCodes = new Set();
-function processArvontaCode(data) {
-  const code = data.match(/\d{4,10}/);
-  if (code) { arvontaCodes.add(code[0]); renderCodes(); }
-  startScan('arvonta');
-}
-function addArvontaCodeManual() { arvontaCodes.add(document.getElementById('arvonta-manual-input').value); renderCodes(); }
-function renderCodes() {
-  document.getElementById('arvonta-count').textContent = arvontaCodes.size;
-  document.getElementById('codes-list').innerHTML = [...arvontaCodes].map(c => `<div class="code-chip">🎫 ${c}</div>`).join('');
-}
-function clearArvonta() { arvontaCodes.clear(); renderCodes(); }
-function suoritaArvonta() {
-  const codes = [...arvontaCodes];
-  if (!codes.length) return;
-  const disp = document.getElementById('winner-display');
+function runRaffle() {
+  const codes = [...state.participants];
+  if(codes.length === 0) return alert("Ei osallistujia!");
+  const display = document.getElementById('winner-display');
   let count = 0;
   const itv = setInterval(() => {
-    disp.innerHTML = `<div class="winner-box"><div class="spinner">${codes[Math.floor(Math.random()*codes.length)]}</div></div>`;
-    if (++count > 30) {
+    display.innerHTML = `<div class="verdict win" style="font-size:2rem">ARVOTAAN...<br>${codes[Math.floor(Math.random()*codes.length)]}</div>`;
+    if(++count > 30) {
       clearInterval(itv);
-      disp.innerHTML = `<div class="winner-box"><div class="winner-number">${codes[Math.floor(Math.random()*codes.length)]}</div></div>`;
+      display.innerHTML = `<div class="verdict win">🏆 VOITTAJA:<br>${codes[Math.floor(Math.random()*codes.length)]}</div>`;
     }
-  }, 80);
+  }, 100);
 }
-
-updateSettingsInfo();
 </script>
 </body>
 </html>
