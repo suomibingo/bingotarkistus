@@ -1,274 +1,1424 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo-Tarkistaja Pro</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        :root { --bg: #1a1a2e; --card-bg: #ffffff; --accent: #e94560; --ok: #0f9d58; --info: #2980b9; --gold: #f1c40f; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 500px; text-align: center; }
-        
-        /* Kortit */
-        .card { background: var(--card-bg); color: #333; padding: 20px; border-radius: 15px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .hidden { display: none !important; }
-        
-        /* Napit */
-        .btn { border: none; padding: 15px 20px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
-        .btn-main { background: var(--accent); color: white; }
-        .btn-blue { background: var(--info); color: white; }
-        .btn-gold { background: var(--gold); color: #1a1a2e; }
-        .btn-back { background: #95a5a6; color: white; margin-top: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo Tarkistus</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap');
 
-        /* Vaihenäyttö */
-        #step-indicator { font-size: 14px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #f0c040;
+    --accent2: #e05a2b;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --blue: #3498db;
+    --text: #e8eaf0;
+    --text-dim: #7a8499;
+    --border: #2a3449;
+    --hit: #f0c040;
+    --miss: #1e2d3d;
+    --star: #f0c040;
+    --bingo-line: #e74c3c;
+    --radius: 8px;
+  }
 
-        /* Skanneri */
-        #scanner-container { width: 100%; border-radius: 15px; overflow: hidden; background: #000; margin-top: 10px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Rivi-valitsin */
-        .line-grid { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
-        .line-btn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--info); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; cursor: pointer; }
-        .line-btn.selected { background: var(--info); color: white; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        /* Bingo Ruudukko */
-        .bingo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: #444; padding: 5px; border-radius: 8px; margin-top: 15px; }
-        .cell { background: white; color: black; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; position: relative; border-radius: 4px; }
-        .cell.matched { background: #ffdee2; }
-        .cell.matched::after { content: ""; position: absolute; width: 70%; height: 70%; border: 3px solid var(--accent); border-radius: 50%; }
-        .cell.star { color: var(--gold); font-size: 22px; }
-        .spacer { grid-column: span 5; height: 12px; background: #222; }
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(240,192,64,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(224,90,43,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        /* Tulokset */
-        .banner { padding: 15px; border-radius: 10px; font-weight: bold; font-size: 20px; margin-bottom: 15px; }
-        .success { background: var(--ok); color: white; }
-        .fail { background: var(--accent); color: white; }
-    </style>
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--bg);
+    flex-shrink: 0;
+    letter-spacing: 1px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  h1 span { color: var(--accent); }
+
+  /* MODE SELECTOR */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .mode-tab {
+    flex: 1;
+    padding: 12px 10px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .mode-tab:hover { border-color: var(--accent); color: var(--text); }
+  .mode-tab.active {
+    border-color: var(--accent);
+    background: rgba(240,192,64,0.1);
+    color: var(--accent);
+  }
+
+  /* SECTIONS */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .section.visible { display: block; }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  /* SETTINGS */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .setting-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    min-width: 130px;
+  }
+
+  .pill-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .pill:hover { border-color: var(--accent); color: var(--text); }
+  .pill.active { border-color: var(--accent); background: rgba(240,192,64,0.12); color: var(--accent); }
+
+  /* CAMERA / SCANNER */
+  .scanner-area {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    max-height: 320px;
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scanner-area video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .scanner-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .scan-frame {
+    width: 200px;
+    height: 200px;
+    position: relative;
+  }
+
+  .scan-frame::before, .scan-frame::after,
+  .scan-frame > span::before, .scan-frame > span::after {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+  }
+
+  .scan-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
+  .scan-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
+  .scan-frame > span::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
+  .scan-frame > span::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
+
+  .scan-line {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan 2s ease-in-out infinite;
+  }
+
+  @keyframes scan {
+    0% { top: 4px; opacity: 1; }
+    100% { top: calc(100% - 4px); opacity: 0.3; }
+  }
+
+  .scanner-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-dim);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .scanner-icon {
+    font-size: 3rem;
+    opacity: 0.4;
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover { background: #f5d070; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  .btn-danger {
+    background: rgba(231,76,60,0.15);
+    color: var(--red);
+    border: 1.5px solid rgba(231,76,60,0.3);
+  }
+
+  .btn-danger:hover { background: rgba(231,76,60,0.25); }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  /* STATUS BADGES */
+  .status-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(46,204,113,0.12);
+    border: 1px solid rgba(46,204,113,0.3);
+    color: var(--green);
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .status-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(231,76,60,0.12);
+    border: 1px solid rgba(231,76,60,0.3);
+    color: var(--red);
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .info-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .info-box strong { color: var(--accent); }
+
+  /* NUMBER CHIPS */
+  .number-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0;
+  }
+
+  /* BINGO GRID */
+  .bingo-result {
+    margin-top: 8px;
+  }
+
+  .verdict {
+    text-align: center;
+    padding: 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 4px;
+  }
+
+  .verdict.win {
+    background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.05));
+    border: 2px solid rgba(46,204,113,0.4);
+    color: var(--green);
+    animation: pulse-win 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-win {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.2); }
+    50% { box-shadow: 0 0 0 12px rgba(46,204,113,0); }
+  }
+
+  .verdict.loss {
+    background: rgba(231,76,60,0.08);
+    border: 2px solid rgba(231,76,60,0.25);
+    color: var(--red);
+  }
+
+  .grid-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  .bingo-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .grid-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    background: var(--miss);
+    border: 1.5px solid var(--border);
+    color: var(--text-dim);
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .grid-cell.hit {
+    background: rgba(240,192,64,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .grid-cell.hit::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 2.5px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+
+  .grid-cell.star {
+    background: rgba(240,192,64,0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-size: 1.3rem;
+  }
+
+  .bingo-row-wrapper {
+    position: relative;
+  }
+
+  .row-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4px;
+    background: var(--bingo-line);
+    border-radius: 2px;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 10;
+    animation: lineIn 0.4s ease-out;
+  }
+
+  @keyframes lineIn {
+    from { scaleX: 0; opacity: 0; }
+    to { scaleX: 1; opacity: 0.85; }
+  }
+
+  .col-headers {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .col-header {
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .row-stats {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .row-stat {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .row-stat span { color: var(--accent); }
+
+  /* LISÄARVONTA */
+  .codes-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    min-height: 40px;
+  }
+
+  .code-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+
+  .winner-box {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(240,192,64,0.15), rgba(240,192,64,0.05));
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    margin-top: 16px;
+  }
+
+  .winner-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .winner-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    color: var(--text);
+    letter-spacing: 6px;
+    animation: reveal 0.5s ease-out;
+  }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .spinner {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--accent);
+    letter-spacing: 6px;
+    animation: spin 0.08s linear infinite;
+  }
+
+  @keyframes spin {
+    from { opacity: 1; }
+    to { opacity: 0.4; }
+  }
+
+  /* Divider */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 18px 0;
+  }
+
+  /* Manual input */
+  .manual-input {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .manual-input input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .manual-input input:focus { border-color: var(--accent); }
+  .manual-input input::placeholder { color: var(--text-dim); }
+
+  textarea.manual-input-area {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    min-height: 80px;
+    margin-top: 10px;
+  }
+
+  textarea.manual-input-area:focus { border-color: var(--accent); }
+
+  .scan-status {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    min-height: 20px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* Navigation between steps */
+  .steps-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  .step-dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .step-dot.done { background: var(--accent); }
+  .step-dot.active { background: rgba(240,192,64,0.5); }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 1.7rem; }
+    .verdict { font-size: 1.6rem; }
+    .grid-cell { font-size: 0.9rem; }
+    .col-header { font-size: 1.1rem; }
+    .winner-number { font-size: 3rem; }
+  }
+</style>
 </head>
 <body>
+<div class="app">
+  <header>
+    <div class="logo">B!</div>
+    <div>
+      <h1>BINGO <span>TARKISTUS</span></h1>
+      <div style="font-family:'Barlow Condensed';font-size:0.8rem;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;">QR-koodipohjainen tarkistusjärjestelmä</div>
+    </div>
+  </header>
 
-<div class="container">
-    <div id="step-indicator">Vaihe 1/4</div>
-    <h2 id="title" style="margin: 5px 0;">Bingo-Tarkistaja</h2>
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('pieni')">🎯 Pieni Bingo<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">5×5</span></button>
+    <button class="mode-tab" onclick="setMode('iso')">🚢 Iso Bingo<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">3 × 5×5</span></button>
+    <button class="mode-tab" onclick="setMode('arvonta')">🎲 Lisäarvonta<br><span style="font-size:0.75rem;font-weight:400;opacity:0.7">6-num koodit</span></button>
+  </div>
 
-    <!-- VAIHE 1: PELIMUOTO -->
-    <div id="view-mode" class="card">
-        <h3>Valitse pelimuoto:</h3>
-        <button class="btn btn-main" onclick="setMode('pieni')">Pieni Bingo (5x5)</button>
-        <button class="btn btn-blue" onclick="setMode('iso')">Iso Bingo (3x5x5)</button>
-        <button class="btn btn-gold" onclick="setMode('raffle')">🎁 Lisäarvonta</button>
+  <!-- ===================== BINGO SECTIONS ===================== -->
+  <div id="bingo-flow">
+    <!-- Progress dots -->
+    <div class="steps-nav">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+      <div class="step-dot" id="dot4"></div>
     </div>
 
-    <!-- VAIHE 2: RIVIMÄÄRÄ -->
-    <div id="view-lines" class="card hidden">
-        <h3>Kuinka monta riviä haetaan?</h3>
-        <p>Ison bingon tapauksessa rivien on oltava samassa ruudukossa.</p>
-        <div class="line-grid">
-            <div class="line-btn" onclick="setLines(1)">1</div>
-            <div class="line-btn" onclick="setLines(2)">2</div>
-            <div class="line-btn" onclick="setLines(3)">3</div>
-            <div class="line-btn" onclick="setLines(4)">4</div>
-            <div class="line-btn" onclick="setLines(5)">5</div>
+    <!-- STEP 1: Settings -->
+    <div class="section visible" id="step1">
+      <div class="step-badge"><div class="step-num">1</div><div class="step-label">Asetukset</div></div>
+
+      <div class="setting-row" id="big-bingo-target-row">
+        <div class="setting-label">Tavoiterivit</div>
+        <div class="pill-group" id="target-pills">
+          <button class="pill active" onclick="setTarget(1)">1 rivi</button>
+          <button class="pill" onclick="setTarget(2)">2 riviä</button>
+          <button class="pill" onclick="setTarget(3)">3 riviä</button>
+          <button class="pill" onclick="setTarget(4)">4 riviä</button>
+          <button class="pill" onclick="setTarget(5)">5 riviä</button>
         </div>
-        <button class="btn btn-back" onclick="location.reload()">← Peruuta</button>
+      </div>
+
+      <div class="info-box" id="settings-info">
+        Valittu pelimuoto: <strong id="mode-label">Pieni Bingo (5×5)</strong><br>
+        Tarkistetaan <strong id="target-label">1 täysi rivi</strong> samasta ruudukosta.
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="goStep(2)">Seuraava → Skannaa TV</button>
+      </div>
     </div>
 
-    <!-- SKANNAUS-NÄKYMÄ (Käytetään kaikille skannauksille) -->
-    <div id="view-scan" class="hidden" style="width: 100%;">
-        <div class="card">
-            <h3 id="scan-instruction">Skannaa TV:n QR-koodi</h3>
-            <div id="scanner-container">
-                <div id="reader"></div>
-            </div>
-            <div id="tv-status" style="margin-top: 10px; font-weight: bold;"></div>
-            <button class="btn btn-back" onclick="location.reload()">← Lopeta ja nollaa</button>
+    <!-- STEP 2: Scan TV -->
+    <div class="section" id="step2">
+      <div class="step-badge"><div class="step-num">2</div><div class="step-label">Skannaa TV — Huudetut numerot</div></div>
+
+      <div class="scanner-area" id="scanner2-area">
+        <div id="scanner2-placeholder" class="scanner-placeholder">
+          <div class="scanner-icon">📺</div>
+          <div>Paina nappia käynnistääksesi kamera</div>
         </div>
-    </div>
-
-    <!-- TULOKSET -->
-    <div id="view-results" class="hidden" style="width: 100%;">
-        <div class="card">
-            <div id="result-banner" class="banner">Tarkistetaan...</div>
-            <div id="result-text" style="margin-bottom: 10px; font-size: 14px;"></div>
-            <div id="bingo-grid" class="bingo-grid"></div>
-            <button class="btn btn-blue" onclick="resetForNewCard()">Tarkista seuraava lappu</button>
-            <button class="btn btn-back" onclick="location.reload()">← Takaisin etusivulle</button>
+        <video id="video2" autoplay muted playsinline style="display:none"></video>
+        <div class="scanner-overlay" id="scan2-overlay" style="display:none">
+          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
         </div>
+      </div>
+
+      <div class="scan-status" id="scan2-status">Ei skannattu</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startScan(2)">📷 Käynnistä kamera</button>
+        <button class="btn btn-secondary" onclick="stopScan(2)">⏹ Pysäytä</button>
+      </div>
+
+      <hr>
+      <div style="font-family:'Barlow Condensed';font-size:0.85rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px">Tai syötä numerot käsin</div>
+      <textarea class="manual-input-area" id="tv-manual" placeholder="Esim: 3 15 22 41 67 (välilyönnillä eroteltuina)"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="parseTVManual()">✓ Tallenna numerot</button>
+      </div>
+
+      <div id="tv-numbers-display" class="hidden" style="margin-top:14px">
+        <div class="section-title">Huudetut numerot (<span id="tv-count">0</span> kpl)</div>
+        <div class="number-chips" id="tv-chips"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-secondary" onclick="goStep(1)">← Takaisin</button>
+        <button class="btn btn-primary" id="to-step3-btn" onclick="goStep(3)" disabled>Seuraava → Skannaa Lappu</button>
+      </div>
     </div>
 
-    <!-- ARVONTA-TULOKSET -->
-    <div id="view-raffle" class="card hidden">
-        <h3 id="raffle-winner" style="font-size: 30px; color: var(--ok);">...</h3>
-        <div id="raffle-list" style="font-size: 14px; color: #666; text-align: left; max-height: 100px; overflow-y: auto; background: #eee; padding: 10px; border-radius: 5px;"></div>
-        <button class="btn btn-gold" id="raffle-btn" onclick="startScanner('raffle')">Skannaa uusi osallistuja</button>
-        <button class="btn btn-blue" onclick="drawWinner()">ARVO VOITTAJA</button>
-        <button class="btn btn-back" onclick="location.reload()">← Lopeta</button>
+    <!-- STEP 3: Scan Ticket -->
+    <div class="section" id="step3">
+      <div class="step-badge"><div class="step-num">3</div><div class="step-label">Skannaa Lappu</div></div>
+
+      <div class="scanner-area" id="scanner3-area">
+        <div id="scanner3-placeholder" class="scanner-placeholder">
+          <div class="scanner-icon">🎟</div>
+          <div>Paina nappia käynnistääksesi kamera</div>
+        </div>
+        <video id="video3" autoplay muted playsinline style="display:none"></video>
+        <div class="scanner-overlay" id="scan3-overlay" style="display:none">
+          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
+        </div>
+      </div>
+
+      <div class="scan-status" id="scan3-status">Ei skannattu</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startScan(3)">📷 Käynnistä kamera</button>
+        <button class="btn btn-secondary" onclick="stopScan(3)">⏹ Pysäytä</button>
+      </div>
+
+      <hr>
+      <div style="font-family:'Barlow Condensed';font-size:0.85rem;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px">Tai syötä lapun QR-data käsin</div>
+      <textarea class="manual-input-area" id="ticket-manual" placeholder="QR-datan sisältö, esim: B:1,15,32 I:20,45 N:T,31 G:46,59 O:65,72,90&#10;(tai vain numerot pilkulla eroteltuina)"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="parseTicketManual()">✓ Tallenna lappu</button>
+      </div>
+
+      <div id="ticket-preview" class="hidden" style="margin-top:14px">
+        <div class="section-title">Lapun tiedot tallennettu</div>
+        <div class="info-box" id="ticket-info-box"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Takaisin</button>
+        <button class="btn btn-primary" id="to-step4-btn" onclick="checkBingo()" disabled>Tarkista Bingo!</button>
+      </div>
     </div>
+
+    <!-- STEP 4: Results -->
+    <div class="section" id="step4">
+      <div class="step-badge"><div class="step-num">4</div><div class="step-label">Tulokset</div></div>
+
+      <div id="bingo-results"></div>
+
+      <div class="btn-row" style="margin-top:20px">
+        <button class="btn btn-secondary" onclick="goStep(3)">← Tarkista uusi lappu</button>
+        <button class="btn btn-secondary" onclick="resetAll()">🔄 Aloita alusta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== LISÄARVONTA ===================== -->
+  <div id="arvonta-flow" class="hidden">
+    <div class="section visible">
+      <div class="step-badge"><div class="step-num">🎲</div><div class="step-label">Lisäarvonta</div></div>
+
+      <div class="scanner-area" id="scanner-arvonta-area">
+        <div id="scanner-arvonta-placeholder" class="scanner-placeholder">
+          <div class="scanner-icon">🎫</div>
+          <div>Skannaa osallistujien koodeja</div>
+        </div>
+        <video id="video-arvonta" autoplay muted playsinline style="display:none"></video>
+        <div class="scanner-overlay" id="scan-arvonta-overlay" style="display:none">
+          <div class="scan-frame"><span></span><div class="scan-line"></div></div>
+        </div>
+      </div>
+
+      <div class="scan-status" id="scan-arvonta-status">Ei skannattu</div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startScan('arvonta')">📷 Käynnistä kamera</button>
+        <button class="btn btn-secondary" onclick="stopScan('arvonta')">⏹ Pysäytä</button>
+      </div>
+
+      <hr>
+      <div class="manual-input">
+        <input type="text" id="arvonta-manual-input" placeholder="Syötä koodi käsin (esim. 123456)" maxlength="10">
+        <button class="btn btn-secondary" onclick="addArvontaCodeManual()">+ Lisää</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="section-title">Osallistujat (<span id="arvonta-count">0</span> kpl)</div>
+        <div class="codes-list" id="codes-list"></div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="suoritaArvonta()" id="arvonta-btn">🎯 Suorita arvonta</button>
+        <button class="btn btn-danger" onclick="clearArvonta()">🗑 Tyhjennä lista</button>
+      </div>
+
+      <div id="winner-display"></div>
+    </div>
+  </div>
 
 </div>
 
 <script>
-    let scanner = null;
-    let gameMode = '';
-    let targetLines = 0;
-    let calledNumbers = [];
-    let participants = [];
-    let currentStep = 'tv';
+// ======================== STATE ========================
+let currentMode = 'pieni';
+let targetRows = 1;
+let calledNumbers = new Set();
+let ticketGrids = []; // Array of 5-col grids (1 for small, 3 for big)
+let scanStreams = {};
+let scanIntervals = {};
+let arvontaCodes = new Set();
+let arvontaSpinInterval = null;
 
-    function setMode(mode) {
-        gameMode = mode;
-        if (mode === 'raffle') {
-            document.getElementById('step-indicator').innerText = "Arvonta";
-            showView('view-raffle');
-        } else {
-            showView('view-lines');
-            document.getElementById('step-indicator').innerText = "Vaihe 1/4";
+// ======================== MODE ========================
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['pieni','iso','arvonta'][i] === mode);
+  });
+
+  document.getElementById('bingo-flow').classList.toggle('hidden', mode === 'arvonta');
+  document.getElementById('arvonta-flow').classList.toggle('hidden', mode !== 'arvonta');
+
+  if (mode !== 'arvonta') {
+    updateSettingsInfo();
+    goStep(1);
+  }
+}
+
+function setTarget(n) {
+  targetRows = n;
+  document.querySelectorAll('#target-pills .pill').forEach((p,i) => {
+    p.classList.toggle('active', i === n-1);
+  });
+  updateSettingsInfo();
+}
+
+function updateSettingsInfo() {
+  const modeNames = { pieni: 'Pieni Bingo (5×5)', iso: 'Iso Bingo (3 × 5×5)' };
+  document.getElementById('mode-label').textContent = modeNames[currentMode];
+  document.getElementById('target-label').textContent = `${targetRows} täysi${targetRows===1?'':'ä'} rivi${targetRows>1?'ä':''}`;
+  const info = document.getElementById('settings-info');
+  if (currentMode === 'iso') {
+    info.innerHTML = `Valittu pelimuoto: <strong>${modeNames[currentMode]}</strong><br>Tarkistetaan <strong>${targetRows} täyttä rivi${targetRows>1?'ä':''}</strong> samasta ruudukosta (ylä/keski/ala).`;
+  } else {
+    info.innerHTML = `Valittu pelimuoto: <strong>${modeNames[currentMode]}</strong><br>Tarkistetaan <strong>${targetRows} täyttä rivi${targetRows>1?'ä':''}</strong> ruudukosta.`;
+  }
+}
+
+// ======================== NAVIGATION ========================
+function goStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('step'+i).classList.toggle('visible', i === n);
+    const dot = document.getElementById('dot'+i);
+    dot.classList.remove('active','done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  });
+  // Stop all cameras when navigating away
+  if (n !== 2) { stopScan(2); }
+  if (n !== 3) { stopScan(3); }
+}
+
+function resetAll() {
+  calledNumbers = new Set();
+  ticketGrids = [];
+  document.getElementById('tv-chips').innerHTML = '';
+  document.getElementById('tv-numbers-display').classList.add('hidden');
+  document.getElementById('tv-manual').value = '';
+  document.getElementById('ticket-manual').value = '';
+  document.getElementById('ticket-preview').classList.add('hidden');
+  document.getElementById('to-step3-btn').disabled = true;
+  document.getElementById('to-step4-btn').disabled = true;
+  document.getElementById('scan2-status').textContent = 'Ei skannattu';
+  document.getElementById('scan3-status').textContent = 'Ei skannattu';
+  goStep(1);
+}
+
+// ======================== CAMERA / QR SCANNER ========================
+async function startScan(id) {
+  stopScan(id);
+  const videoEl = document.getElementById(`video${id}`);
+  const placeholder = document.getElementById(`scanner${id}-placeholder`);
+  const overlay = document.getElementById(`scan${id}-overlay`);
+  const statusEl = document.getElementById(`scan${id}-status`);
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    scanStreams[id] = stream;
+    videoEl.srcObject = stream;
+    videoEl.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+    if (overlay) overlay.style.display = 'flex';
+    statusEl.textContent = 'Skannataan... Osoita QR-koodia.';
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    scanIntervals[id] = setInterval(() => {
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        canvas.width = videoEl.videoWidth;
+        canvas.height = videoEl.videoHeight;
+        ctx.drawImage(videoEl, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if (code) {
+          onQRScanned(id, code.data);
         }
+      }
+    }, 200);
+  } catch(e) {
+    statusEl.textContent = 'Kameran käynnistys epäonnistui: ' + e.message;
+  }
+}
+
+function stopScan(id) {
+  if (scanIntervals[id]) { clearInterval(scanIntervals[id]); delete scanIntervals[id]; }
+  if (scanStreams[id]) {
+    scanStreams[id].getTracks().forEach(t => t.stop());
+    delete scanStreams[id];
+  }
+  const videoEl = document.getElementById(`video${id}`);
+  const placeholder = document.getElementById(`scanner${id}-placeholder`);
+  const overlay = document.getElementById(`scan${id}-overlay`);
+  if (videoEl) { videoEl.style.display = 'none'; videoEl.srcObject = null; }
+  if (placeholder) placeholder.style.display = 'flex';
+  if (overlay) overlay.style.display = 'none';
+}
+
+function onQRScanned(id, data) {
+  if (id === 2) {
+    stopScan(2);
+    processTVData(data);
+    document.getElementById('scan2-status').textContent = '✓ QR-koodi skannattu!';
+  } else if (id === 3) {
+    stopScan(3);
+    processTicketData(data);
+    document.getElementById('scan3-status').textContent = '✓ Lapun QR-koodi skannattu!';
+  } else if (id === 'arvonta') {
+    processArvontaCode(data);
+  }
+}
+
+// ======================== TV DATA (Called Numbers) ========================
+function processTVData(text) {
+  // Extract all numbers from the QR data
+  const nums = text.match(/\d+/g);
+  if (nums) {
+    nums.forEach(n => { const num = parseInt(n); if (num >= 1 && num <= 90) calledNumbers.add(num); });
+  }
+  renderCalledNumbers();
+}
+
+function parseTVManual() {
+  const text = document.getElementById('tv-manual').value;
+  processTVData(text);
+}
+
+function renderCalledNumbers() {
+  if (calledNumbers.size === 0) return;
+  const sorted = [...calledNumbers].sort((a,b) => a-b);
+  document.getElementById('tv-count').textContent = sorted.length;
+  document.getElementById('tv-chips').innerHTML = sorted.map(n =>
+    `<div class="chip">${n}</div>`
+  ).join('');
+  document.getElementById('tv-numbers-display').classList.remove('hidden');
+  document.getElementById('to-step3-btn').disabled = false;
+  document.getElementById('scan2-status').textContent = `✓ ${sorted.length} numeroa tallennettu`;
+}
+
+// ======================== TICKET DATA ========================
+function processTicketData(text) {
+  ticketGrids = parseTicketQR(text);
+  if (ticketGrids.length > 0) {
+    const gridCount = ticketGrids.length;
+    document.getElementById('ticket-info-box').innerHTML =
+      `Ladattu <strong>${gridCount} ruudukko${gridCount>1?'a':''}</strong> lapulta.<br>` +
+      `Rivejä yhteensä: <strong>${gridCount * 5}</strong>`;
+    document.getElementById('ticket-preview').classList.remove('hidden');
+    document.getElementById('to-step4-btn').disabled = false;
+    document.getElementById('scan3-status').textContent = `✓ Lappu ladattu (${gridCount} ruudukko)`;
+  } else {
+    document.getElementById('scan3-status').textContent = '⚠ Lapun tietoja ei voitu lukea';
+  }
+}
+
+function parseTicketQR(text) {
+  // Format 1: B:1,15,32 I:20,45 N:T,31 G:46,59 O:65,72,90
+  // Format 2: plain numbers (generate demo grid)
+  const grids = [];
+
+  // Check if it has column headers B/I/N/G/O
+  const hasColumns = /[BINGO]:/i.test(text);
+
+  if (hasColumns) {
+    // Parse multi-grid: GRID1: B:... I:... | GRID2: B:... (pipes or newlines separate grids)
+    const gridTexts = text.split(/\||\n\n/);
+    for (const gt of gridTexts) {
+      const grid = parseOneGridFromText(gt.trim());
+      if (grid) grids.push(grid);
     }
-
-    function setLines(n) {
-        targetLines = n;
-        document.getElementById('step-indicator').innerText = "Vaihe 2/4";
-        startScanner('tv');
+    if (grids.length === 0) {
+      const grid = parseOneGridFromText(text);
+      if (grid) grids.push(grid);
     }
-
-    function showView(id) {
-        document.querySelectorAll('.card, #view-scan, #view-results').forEach(v => v.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
+  } else {
+    // Just numbers - try to build one grid
+    const nums = text.match(/\d+/g);
+    if (nums && nums.length >= 25) {
+      const numSet = nums.slice(0, 25).map(Number);
+      // Split into 5 cols of 5
+      const cols = ['B','I','N','G','O'].map((col, ci) => ({
+        col,
+        nums: numSet.slice(ci*5, ci*5+5).map(n => ({ val: n, star: false }))
+      }));
+      grids.push(cols);
+    } else if (nums && nums.length >= 5) {
+      // Pad to make 5x5
+      const numSet = [...nums.map(Number)];
+      while (numSet.length < 25) numSet.push(numSet[numSet.length - 1] + 1);
+      const cols = ['B','I','N','G','O'].map((col, ci) => ({
+        col,
+        nums: numSet.slice(ci*5, ci*5+5).map(n => ({ val: n, star: false }))
+      }));
+      grids.push(cols);
     }
+  }
 
-    async function startScanner(target) {
-        currentStep = target;
-        showView('view-scan');
-        
-        const inst = document.getElementById('scan-instruction');
-        if (target === 'tv') inst.innerText = "Skannaa TV:n QR-koodi";
-        else if (target === 'card') inst.innerText = "Skannaa BINGOLAPUN QR-koodi";
-        else if (target === 'raffle') inst.innerText = "Skannaa OSALLISTUJAN QR-koodi";
+  // For big bingo mode, ensure 3 grids; for small, 1
+  if (currentMode === 'iso' && grids.length === 1) {
+    // Duplicate for demo if only 1 grid provided
+    grids.push({...grids[0]}, {...grids[0]});
+  } else if (currentMode === 'pieni' && grids.length > 1) {
+    return [grids[0]];
+  }
 
-        if (!scanner) scanner = new Html5Qrcode("reader");
-        
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            handleScan(text);
-        }).catch(err => alert("Kamera-ongelma: " + err));
-    }
+  return grids.slice(0, currentMode === 'iso' ? 3 : 1);
+}
 
-    function handleScan(text) {
-        if (currentStep === 'tv') {
-            calledNumbers = (text.match(/\d+/g) || []).map(Number);
-            if (calledNumbers.length > 0) {
-                document.getElementById('step-indicator').innerText = "Vaihe 3/4";
-                startScanner('card');
-            } else {
-                alert("TV-koodi oli tyhjä!");
-            }
-        } else if (currentStep === 'card') {
-            scanner.stop().then(() => {
-                document.getElementById('step-indicator').innerText = "VAIHE 4/4: TULOS";
-                parseBingoCard(text);
-            });
-        } else if (currentStep === 'raffle') {
-            const code = (text.match(/\d{6}/) || [])[0];
-            if (code && !participants.includes(code)) participants.push(code);
-            scanner.stop().then(() => {
-                updateRaffleUI();
-                showView('view-raffle');
-            });
+function parseOneGridFromText(text) {
+  // B:1,2,3,4,5 I:16,17,18,19,20 N:31,T,33,34,35 G:46,47,48,49,50 O:61,62,63,64,65
+  const cols = [];
+  const colRegex = /([BINGO]):([^\s]+)/gi;
+  let m;
+  while ((m = colRegex.exec(text)) !== null) {
+    const colName = m[1].toUpperCase();
+    const parts = m[2].split(',');
+    const nums = parts.map(p => {
+      if (p.toUpperCase() === 'T' || p.toUpperCase() === '*') return { val: '★', star: true };
+      const n = parseInt(p);
+      return { val: isNaN(n) ? 0 : n, star: false };
+    });
+    // Pad to 5 rows
+    while (nums.length < 5) nums.push({ val: 0, star: false });
+    cols.push({ col: colName, nums: nums.slice(0, 5) });
+  }
+
+  if (cols.length === 5) return cols;
+  return null;
+}
+
+function parseTicketManual() {
+  const text = document.getElementById('ticket-manual').value;
+  if (!text.trim()) return;
+  processTicketData(text);
+}
+
+// ======================== BINGO CHECK ========================
+function checkBingo() {
+  if (!ticketGrids.length) return;
+  goStep(4);
+
+  const gridLabels = currentMode === 'iso' ? ['YLÄ', 'KESKI', 'ALA'] : [''];
+  let html = '';
+  let totalBingo = 0;
+  let gridResults = [];
+
+  ticketGrids.forEach((grid, gi) => {
+    // Compute which rows are complete
+    const rows = [0,1,2,3,4].map(r => {
+      return grid.every(col => {
+        const cell = col.nums[r];
+        if (cell.star) return true;
+        return calledNumbers.has(cell.val);
+      });
+    });
+    const completedRows = rows.filter(Boolean).length;
+    gridResults.push(completedRows);
+
+    // Build grid HTML
+    const label = gridLabels[gi];
+    if (label) html += `<div class="grid-label">${label}</div>`;
+
+    html += `<div class="col-headers">${grid.map(c => `<div class="col-header">${c.col}</div>`).join('')}</div>`;
+
+    // Rows
+    for (let r = 0; r < 5; r++) {
+      const isCompleted = rows[r];
+      html += `<div class="bingo-row-wrapper" style="position:relative;margin-bottom:6px">`;
+      html += `<div class="bingo-grid" style="margin-bottom:0">`;
+      for (let c = 0; c < 5; c++) {
+        const cell = grid[c].nums[r];
+        let cls = 'grid-cell';
+        let content = cell.val;
+        if (cell.star) {
+          cls += ' star';
+          content = '★';
+        } else if (calledNumbers.has(cell.val)) {
+          cls += ' hit';
         }
+        html += `<div class="${cls}">${content}</div>`;
+      }
+      html += `</div>`;
+      if (isCompleted) html += `<div class="row-line"></div>`;
+      html += `</div>`;
     }
+    totalBingo += completedRows;
+  });
 
-    function parseBingoCard(text) {
-        const letters = ['B', 'I', 'N', 'G', 'O'];
-        const columns = {};
-        letters.forEach(l => {
-            const regex = new RegExp(l + ":\\s*([\\d,T\\s]+)", "i");
-            const match = text.match(regex);
-            columns[l] = match ? match[1].split(/[\s,]+/).filter(x => x.trim() !== "") : [];
-        });
-        calculateBingo(columns);
+  // Verdict
+  let isBingo = false;
+  let verdictText = '';
+
+  if (currentMode === 'pieni') {
+    isBingo = gridResults[0] >= targetRows;
+    verdictText = isBingo ? '✓ BINGO ON AITO!' : '✗ EI BINGOA VIELÄ';
+    verdictText += `<br><span style="font-size:1.2rem">${gridResults[0]}/${targetRows} riviä täynnä</span>`;
+  } else {
+    // Big bingo: any one grid must meet target
+    isBingo = gridResults.some(r => r >= targetRows);
+    const names = ['Ylä', 'Keski', 'Ala'];
+    const details = gridResults.map((r, i) => `${names[i]}: ${r}`).join(' | ');
+    verdictText = isBingo ? '✓ BINGO ON AITO!' : '✗ EI BINGOA VIELÄ';
+    verdictText += `<br><span style="font-size:1.1rem">${details}</span>`;
+  }
+
+  const verdictHTML = `<div class="verdict ${isBingo ? 'win' : 'loss'}">${verdictText}</div>`;
+  document.getElementById('bingo-results').innerHTML = verdictHTML + html;
+}
+
+// ======================== LISÄARVONTA ========================
+function processArvontaCode(text) {
+  const nums = text.match(/\d{4,10}/g);
+  if (!nums) return;
+  const code = nums[0];
+  if (arvontaCodes.has(code)) {
+    document.getElementById('scan-arvonta-status').textContent = `⚠ Koodi ${code} on jo listalla!`;
+    return;
+  }
+  arvontaCodes.add(code);
+  document.getElementById('scan-arvonta-status').textContent = `✓ Lisätty: ${code}`;
+  renderCodes();
+}
+
+function addArvontaCodeManual() {
+  const val = document.getElementById('arvonta-manual-input').value.trim();
+  if (!val) return;
+  if (arvontaCodes.has(val)) {
+    alert('Koodi on jo listalla!');
+    return;
+  }
+  arvontaCodes.add(val);
+  document.getElementById('arvonta-manual-input').value = '';
+  document.getElementById('scan-arvonta-status').textContent = `✓ Lisätty: ${val}`;
+  renderCodes();
+}
+
+function renderCodes() {
+  document.getElementById('arvonta-count').textContent = arvontaCodes.size;
+  document.getElementById('codes-list').innerHTML = [...arvontaCodes].map(c =>
+    `<div class="code-chip">🎫 ${c}</div>`
+  ).join('');
+}
+
+function clearArvonta() {
+  arvontaCodes.clear();
+  renderCodes();
+  document.getElementById('winner-display').innerHTML = '';
+  document.getElementById('scan-arvonta-status').textContent = 'Lista tyhjennetty';
+}
+
+function suoritaArvonta() {
+  if (arvontaCodes.size === 0) { alert('Lisää osallistujia ensin!'); return; }
+  if (arvontaSpinInterval) clearInterval(arvontaSpinInterval);
+
+  const display = document.getElementById('winner-display');
+  const codes = [...arvontaCodes];
+  let i = 0;
+
+  display.innerHTML = `<div class="winner-box"><div class="winner-label">ARVOTAAN...</div><div class="spinner" id="spin-num">${codes[0]}</div></div>`;
+
+  let duration = 80;
+  let count = 0;
+  const maxCount = 40;
+
+  arvontaSpinInterval = setInterval(() => {
+    document.getElementById('spin-num').textContent = codes[i % codes.length];
+    i++;
+    count++;
+    if (count > maxCount * 0.6) duration = 80 + (count - maxCount * 0.6) * 15;
+    clearInterval(arvontaSpinInterval);
+    if (count >= maxCount) {
+      const winner = codes[Math.floor(Math.random() * codes.length)];
+      display.innerHTML = `
+        <div class="winner-box">
+          <div class="winner-label">🏆 VOITTAJA</div>
+          <div class="winner-number">${winner}</div>
+        </div>`;
+    } else {
+      arvontaSpinInterval = setInterval(arguments.callee, duration);
     }
+  }, duration);
+}
 
-    function calculateBingo(cols) {
-        showView('view-results');
-        const gridDiv = document.getElementById('bingo-grid');
-        gridDiv.innerHTML = "";
-        
-        const rowsCount = gameMode === 'pieni' ? 5 : 15;
-        let board = [];
+// Override scanner for arvonta
+function startScan(id) {
+  if (id === 'arvonta') {
+    startScanArvonta();
+    return;
+  }
+  startScanInternal(id);
+}
 
-        for (let r = 0; r < rowsCount; r++) {
-            if (gameMode === 'iso' && r > 0 && r % 5 === 0) {
-                const spacer = document.createElement('div'); spacer.className = 'spacer';
-                gridDiv.appendChild(spacer);
-            }
-            let rowMatched = [];
-            ['B','I','N','G','O'].forEach(l => {
-                let val = cols[l][r] || "";
-                let isStar = (val.toUpperCase() === 'T');
-                let num = isStar ? 'T' : parseInt(val);
-                let isMatched = isStar || calledNumbers.includes(num);
-                rowMatched.push(isMatched);
-                
-                const cell = document.createElement('div');
-                cell.className = 'cell' + (isMatched ? ' matched' : '') + (isStar ? ' star' : '');
-                cell.innerHTML = isStar ? "★" : (num || "");
-                gridDiv.appendChild(cell);
-            });
-            board.push(rowMatched);
-        }
+async function startScanInternal(id) {
+  stopScan(id);
+  const videoEl = document.getElementById(`video${id}`);
+  const placeholder = document.getElementById(`scanner${id}-placeholder`);
+  const overlay = document.getElementById(`scan${id}-overlay`);
+  const statusEl = document.getElementById(`scan${id}-status`);
 
-        // TARKISTUS
-        let win = false;
-        let infoText = "";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    scanStreams[id] = stream;
+    videoEl.srcObject = stream;
+    videoEl.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+    if (overlay) overlay.style.display = 'flex';
+    statusEl.textContent = 'Skannataan... Osoita QR-koodia.';
 
-        if (gameMode === 'iso') {
-            const r1 = board.slice(0,5).filter(row => row.every(c => c)).length;
-            const r2 = board.slice(5,10).filter(row => row.every(c => c)).length;
-            const r3 = board.slice(10,15).filter(row => row.every(c => c)).length;
-            if (r1 >= targetLines || r2 >= targetLines || r3 >= targetLines) win = true;
-            infoText = `Haettu: ${targetLines} riviä samassa. <br> Löydetty: Ylä: ${r1}, Keski: ${r2}, Ala: ${r3}`;
-        } else {
-            const r = board.filter(row => row.every(c => c)).length;
-            if (r >= targetLines) win = true;
-            infoText = `Haettu: ${targetLines} riviä. <br> Löydetty: ${r} riviä.`;
-        }
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-        const banner = document.getElementById('result-banner');
-        if (win) {
-            banner.innerText = "✅ BINGO ON AITO!";
-            banner.className = "banner success";
-        } else {
-            banner.innerText = "❌ EI BINGOA VIELÄ";
-            banner.className = "banner fail";
-        }
-        document.getElementById('result-text').innerHTML = infoText;
-    }
+    scanIntervals[id] = setInterval(() => {
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        canvas.width = videoEl.videoWidth;
+        canvas.height = videoEl.videoHeight;
+        ctx.drawImage(videoEl, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if (code) onQRScanned(id, code.data);
+      }
+    }, 200);
+  } catch(e) {
+    statusEl.textContent = 'Kameran käynnistys epäonnistui: ' + e.message;
+  }
+}
 
-    /* Raffle */
-    function updateRaffleUI() {
-        document.getElementById('raffle-list').innerText = "Mukana: " + participants.join(", ");
-        document.getElementById('raffle-winner').innerText = "Skannattu: " + participants.length;
-    }
+async function startScanArvonta() {
+  stopScan('arvonta');
+  const videoEl = document.getElementById('video-arvonta');
+  const placeholder = document.getElementById('scanner-arvonta-placeholder');
+  const overlay = document.getElementById('scan-arvonta-overlay');
+  const statusEl = document.getElementById('scan-arvonta-status');
 
-    function drawWinner() {
-        if (participants.length === 0) return;
-        const display = document.getElementById('raffle-winner');
-        let count = 0;
-        const itv = setInterval(() => {
-            display.innerText = participants[Math.floor(Math.random() * participants.length)];
-            count++;
-            if (count > 20) {
-                clearInterval(itv);
-                display.innerText = "VOITTAJA: " + participants[Math.floor(Math.random() * participants.length)];
-            }
-        }, 100);
-    }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    scanStreams['arvonta'] = stream;
+    videoEl.srcObject = stream;
+    videoEl.style.display = 'block';
+    placeholder.style.display = 'none';
+    overlay.style.display = 'flex';
+    statusEl.textContent = 'Skannataan... Osoita QR-koodia.';
 
-    function resetForNewCard() {
-        showView('view-scan');
-        startScanner('card');
-    }
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    scanIntervals['arvonta'] = setInterval(() => {
+      if (videoEl.readyState === videoEl.HAVE_ENOUGH_DATA) {
+        canvas.width = videoEl.videoWidth;
+        canvas.height = videoEl.videoHeight;
+        ctx.drawImage(videoEl, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if (code) onQRScanned('arvonta', code.data);
+      }
+    }, 200);
+  } catch(e) {
+    statusEl.textContent = 'Kameran käynnistys epäonnistui: ' + e.message;
+  }
+}
+
+function stopScan(id) {
+  if (scanIntervals[id]) { clearInterval(scanIntervals[id]); delete scanIntervals[id]; }
+  if (scanStreams[id]) { scanStreams[id].getTracks().forEach(t => t.stop()); delete scanStreams[id]; }
+
+  const idStr = id === 'arvonta' ? '-arvonta' : id;
+  const videoEl = document.getElementById(`video${idStr}`);
+  const placeholder = document.getElementById(`scanner${idStr}-placeholder`);
+  const overlay = document.getElementById(`scan${idStr}-overlay`);
+
+  if (videoEl) { videoEl.style.display = 'none'; videoEl.srcObject = null; }
+  if (placeholder) placeholder.style.display = 'flex';
+  if (overlay) overlay.style.display = 'none';
+}
+
+// Init
+updateSettingsInfo();
 </script>
 </body>
 </html>
