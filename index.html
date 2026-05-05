@@ -133,12 +133,6 @@
             font-size: 0.8rem;
             font-weight: bold;
         }
-        .info-text {
-            font-size: 0.75rem;
-            color: #5f5b4c;
-            margin-top: 0.5rem;
-            text-align: center;
-        }
         .bingo-board {
             background: #fef7e0;
             border-radius: 2rem;
@@ -227,18 +221,14 @@
             border-radius: 1rem;
             border: 1px solid #ccc;
         }
-        .participant-list {
-            background: #ece4d5;
-            border-radius: 1rem;
-            padding: 0.5rem;
-            max-height: 150px;
-            overflow-y: auto;
-        }
         .debug-info {
             font-size: 0.7rem;
             color: #666;
             margin-top: 0.3rem;
             word-break: break-all;
+            background: #f5f0e0;
+            padding: 0.3rem;
+            border-radius: 0.5rem;
         }
         @media (max-width: 780px) {
             td, th { width: 45px; height: 45px; font-size: 0.8rem; }
@@ -250,8 +240,8 @@
     <div class="header">
         <h1>🎲 BINGO SMARTCHECK ✨</h1>
         <div class="mode-buttons">
-            <button id="modeSmallBtn" class="mode-btn active">🐞 Pieni Bingo</button>
-            <button id="modeBigBtn" class="mode-btn">🚢 Iso Bingo</button>
+            <button id="modeSmallBtn" class="mode-btn active">🐞 Pieni Bingo (5x5)</button>
+            <button id="modeBigBtn" class="mode-btn">🚢 Iso Bingo (3x5x5)</button>
             <button id="modeExtraBtn" class="mode-btn">🎁 Lisäarvonta</button>
         </div>
     </div>
@@ -316,7 +306,7 @@
             <button id="clearParticipantsBtn">🗑️ TYHJENNÄ</button>
         </div>
         <div><strong>Osallistujat (<span id="participantCount">0</span>)</strong></div>
-        <div id="participantList" class="participant-list">Ei osallistujia</div>
+        <div id="participantList" class="participant-list" style="background:#ece4d5; border-radius:1rem; padding:0.5rem; max-height:150px; overflow-y:auto;"></div>
         <div id="winnerResult" style="margin-top:1rem; font-weight:bold; background:#ffecb3; border-radius:2rem; padding:0.6rem; text-align:center;"></div>
     </div>
 </div>
@@ -366,34 +356,29 @@
         else tvPreview.innerHTML = "📺 Huudetut numerot: " + Array.from(tvNumbers).sort((a,b)=>a-b).join(", ");
     }
     
-    function extractNumbers(text) {
+    function extractNumbersFromText(text) {
         const matches = text.match(/\b([1-9]|[1-5][0-9]|6[0-9]|7[0-5])\b/g);
         if (!matches) return [];
         return [...new Set(matches.map(Number))];
     }
     
     // ----- PARANNELTU LAPUN PARSERI -----
-    // Tukee formaatteja: "B:2,5,8,11,14 I:16,19,22,25,28 N:31,34,37,40,43 G:46,49,52,55,58 O:61,64,67,70,73"
-    // Tai "B 2 5 8 11 14 I 16 19 22 25 28" jne. Tunnistaa myös 'T' jokerina
+    // Formaatti: "B:2,5,8,11,14,17,20,23,26,29,32,35,38,41,44 I:16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 ..."
+    // Tai pienessä bingossa 5 numeroa per sarake
     function parseTicketQR(text) {
-        debugInfo.innerHTML = "Raaka teksti: " + text.substring(0, 150) + "...";
-        
         let upperText = text.toUpperCase();
+        debugInfo.innerHTML = "Raaka QR: " + text.substring(0, 200);
+        
         let letters = ['B', 'I', 'N', 'G', 'O'];
-        let allRows = []; // 5 riviä x 5 saraketta
+        let allColumns = []; // jokainen sarake sisältää listan numeroita
         
-        // Alustetaan 5x5 taulukko
-        for (let i = 0; i < 5; i++) {
-            allRows.push([null, null, null, null, null]);
-        }
-        
-        // Etsi jokainen sarake (B, I, N, G, O)
-        for (let col = 0; col < letters.length; col++) {
-            let letter = letters[col];
-            // Etsi kuvioita kuten "B:2,5,8,11,14" tai "B 2 5 8 11 14" tai "B2,5,8,11,14"
+        // Etsi jokainen sarake erikseen
+        for (let i = 0; i < letters.length; i++) {
+            let letter = letters[i];
+            // Etsi kuvioita: "B:2,5,8,11,14" tai "B 2 5 8 11 14" tai "B2,5,8,11,14"
             let patterns = [
                 new RegExp(`${letter}[\\s:;]*([\\dT, ]+)`, 'i'),
-                new RegExp(`${letter}(\\d[\\dT, ]+)`, 'i')
+                new RegExp(`${letter}([\\dT, ]+)`, 'i')
             ];
             
             let numbersStr = null;
@@ -408,69 +393,85 @@
             if (numbersStr) {
                 // Jaa numerot pilkuilla, välilyönneillä, puolipisteillä
                 let parts = numbersStr.split(/[ ,;]+/);
-                // Ota ensimmäiset 5 numeroa (tai T)
-                for (let row = 0; row < 5 && row < parts.length; row++) {
-                    let val = parts[row].trim().toUpperCase();
+                let columnNumbers = [];
+                for (let part of parts) {
+                    let val = part.trim().toUpperCase();
                     if (val === 'T' || val === '★' || val === 'STAR' || val === '*') {
-                        allRows[row][col] = { value: 0, isJoker: true };
+                        columnNumbers.push({ value: 0, isJoker: true });
                     } else {
                         let num = parseInt(val, 10);
                         if (!isNaN(num) && num >= 1 && num <= 75) {
-                            allRows[row][col] = { value: num, isJoker: false };
-                        } else {
-                            // Jos arvo ei kelpaa, käytä oletusarvoa
-                            allRows[row][col] = { value: (row * 5 + col + 1 + col * 10) % 75 + 1, isJoker: false };
+                            columnNumbers.push({ value: num, isJoker: false });
                         }
                     }
                 }
+                allColumns.push(columnNumbers);
+            } else {
+                // Jos saraketta ei löytynyt, luo tyhjä
+                allColumns.push([]);
             }
         }
         
-        // Tarkista että kaikki solut on täytetty, täytä tyhjät oletuksella
-        for (let r = 0; r < 5; r++) {
-            for (let c = 0; c < 5; c++) {
-                if (allRows[r][c] === null) {
-                    allRows[r][c] = { value: (r * 5 + c + 1 + c * 7) % 75 + 1, isJoker: false };
-                }
+        debugInfo.innerHTML += `<br>📊 Sarakkeiden pituudet: B:${allColumns[0].length}, I:${allColumns[1].length}, N:${allColumns[2].length}, G:${allColumns[3].length}, O:${allColumns[4].length}`;
+        
+        // Määritä rivien määrä (pienessä bingossa 5, isossa 15)
+        let rowCount = 5; // oletus
+        if (allColumns[0] && allColumns[0].length > 5) {
+            rowCount = 15; // iso bingo
+            if (currentMode === 'small') {
+                debugInfo.innerHTML += `<br>⚠️ Varoitus: QR sisältää 15 riviä/sarake, mutta olet pienessä bingossa. Vaihda isoon bingoon.`;
             }
         }
-        
-        // Luo ruudukko (transponoi, koska allRows on rivi x sarake, mutta bingossa B sarake on pystyrivi)
-        // Bingossa B-sarake on ensimmäinen sarake (pystysuora), I toinen jne.
-        // Meillä on allRows[rivi][sarake], se on oikein: rivi 0-4, sarake 0-4 (B,I,N,G,O)
-        let grid = allRows; // Tämä on jo oikeassa muodossa
-        
-        // Debug: näytä ensimmäinen rivi
-        let firstRowStr = grid[0].map(c => c.isJoker ? "T" : c.value).join(", ");
-        debugInfo.innerHTML += `<br>📋 Jäsennelty: rivi0: ${firstRowStr}`;
         
         if (currentMode === 'big') {
-            // Isoa bingoa varten tarvitaan 3 ruudukkoa. Jos vain yksi, kopioidaan
-            let blocks = [grid];
-            while (blocks.length < 3) blocks.push(generateDummyGrid());
+            rowCount = 15;
+        }
+        
+        // Luo ruudukot: isossa bingossa 3 kpl 5x5, pienessä 1 kpl 5x5
+        if (rowCount === 15 && currentMode === 'big') {
+            // Iso bingo: 3 ruudukkoa (ylä, keski, ala)
+            let blocks = [];
+            for (let blockIdx = 0; blockIdx < 3; blockIdx++) {
+                let grid = Array(5).fill().map(() => Array(5).fill(null));
+                for (let col = 0; col < 5; col++) {
+                    let columnData = allColumns[col];
+                    for (let row = 0; row < 5; row++) {
+                        let dataIndex = blockIdx * 5 + row;
+                        if (columnData && dataIndex < columnData.length) {
+                            grid[row][col] = columnData[dataIndex];
+                        } else {
+                            grid[row][col] = { value: (row * 5 + col + 1 + blockIdx * 25) % 75 + 1, isJoker: false };
+                        }
+                    }
+                }
+                blocks.push(grid);
+            }
+            debugInfo.innerHTML += `<br>✅ Iso bingo: 3 ruudukkoa luotu (ylä, keski, ala)`;
             return blocks;
-        } else {
+        } 
+        else {
+            // Pieni bingo: 5x5 ruudukko
+            let grid = Array(5).fill().map(() => Array(5).fill(null));
+            for (let col = 0; col < 5; col++) {
+                let columnData = allColumns[col];
+                for (let row = 0; row < 5; row++) {
+                    if (columnData && row < columnData.length) {
+                        grid[row][col] = columnData[row];
+                    } else {
+                        grid[row][col] = { value: (row * 5 + col + 1) % 75 + 1, isJoker: false };
+                    }
+                }
+            }
+            debugInfo.innerHTML += `<br>✅ Pieni bingo: 5x5 ruudukko luotu`;
             return [grid];
         }
-    }
-    
-    function generateDummyGrid() {
-        let grid = [];
-        for (let i = 0; i < 5; i++) {
-            let row = [];
-            for (let j = 0; j < 5; j++) {
-                row.push({ value: (i * 5 + j + 1 + j * 8) % 75 + 1, isJoker: (i === 2 && j === 2) });
-            }
-            grid.push(row);
-        }
-        return grid;
     }
     
     // TV-skannaus
     function processTvScan(decodedText) {
         if (lastScannedData === decodedText) return;
         lastScannedData = decodedText;
-        const numbers = extractNumbers(decodedText);
+        const numbers = extractNumbersFromText(decodedText);
         if (numbers.length === 0) {
             scanStatus.innerHTML = "⚠️ QR-koodista ei löytynyt numeroita (1-75)";
             scanStatus.className = "status-badge status-warning";
@@ -486,11 +487,10 @@
         setTimeout(() => { scanOverlay.style.backgroundColor = "rgba(0,0,0,0.7)"; }, 300);
     }
     
-    // Lapun skannaus uudella parserilla
+    // Lapun skannaus
     function processTicketScan(decodedText) {
         if (lastScannedData === decodedText) return;
         lastScannedData = decodedText;
-        debugInfo.innerHTML = `QR luettu: ${decodedText.substring(0, 200)}`;
         
         let parsed = parseTicketQR(decodedText);
         if (!parsed || parsed.length === 0) {
@@ -507,7 +507,8 @@
         // Näytä ensimmäisen ruudukon sisältö debugina
         if (currentGrids[0]) {
             let sample = currentGrids[0].slice(0, 2).map(row => row.map(c => c.isJoker ? "T" : c.value).join(",")).join(" | ");
-            debugInfo.innerHTML += `<br>📊 Ruudukko rivi0-1: ${sample}`;
+            debugInfo.innerHTML += `<br>📊 Esim. ruudukko rivi0: ${currentGrids[0][0].map(c => c.isJoker ? "T" : c.value).join(", ")}`;
+            debugInfo.innerHTML += `<br>📊 rivi1: ${currentGrids[0][1].map(c => c.isJoker ? "T" : c.value).join(", ")}`;
         }
         
         scanOverlay.style.backgroundColor = "rgba(46,125,50,0.8)";
@@ -670,17 +671,17 @@
         let html = '';
         for (let g=0; g<currentGrids.length; g++) {
             if (currentGrids.length > 1) {
-                let titles = ['🔷 YLÄRUUDUKKO', '🔶 KESKIRUUDUKKO', '🔴 ALARUUDUKKO'];
+                let titles = ['🔷 YLÄRUUDUKKO (rivit 1-5)', '🔶 KESKIRUUDUKKO (rivit 6-10)', '🔴 ALARUUDUKKO (rivit 11-15)'];
                 html += `<h4 style="margin:1rem 0 0.3rem 0;">${titles[g]}</h4>`;
             }
-            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
+            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')} </thead><tbody>`;
             for (let r=0; r<5; r++) {
                 html += `<tr>`;
                 for (let c=0; c<5; c++) {
                     let cell = currentGrids[g][r][c];
                     let display = cell.isJoker ? "⭐" : cell.value;
                     let cls = cell.isJoker ? "joker" : "";
-                    html += `<td class="${cls}">${display}</td>`;
+                    html += `<td class="${cls}">${display}<!td>`;
                 }
                 html += `</tr>`;
             }
@@ -693,10 +694,10 @@
         let html = '';
         for (let g=0; g<grids.length; g++) {
             if (grids.length > 1) {
-                let titles = ['🔷 YLÄRUUDUKKO', '🔶 KESKIRUUDUKKO', '🔴 ALARUUDUKKO'];
+                let titles = ['🔷 YLÄRUUDUKKO (rivit 1-5)', '🔶 KESKIRUUDUKKO (rivit 6-10)', '🔴 ALARUUDUKKO (rivit 11-15)'];
                 html += `<h4 style="margin:1rem 0 0.3rem 0;">${titles[g]}</h4>`;
             }
-            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
+            html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')} </thead><tbody>`;
             let grid = grids[g];
             let hits = hitsMatrices[g];
             for (let r=0; r<5; r++) {
@@ -708,10 +709,10 @@
                     let cls = "";
                     if (cell.isJoker) cls = "joker";
                     else if (hits[r][c]) cls = "hit";
-                    html += `<td class="${cls}">${display}</td>`;
+                    html += `<td class="${cls}">${display}<!td>`;
                 }
                 if (rowFull) {
-                    html += `<td style="border:none; width:10px;"><div class="strike-line"></div></td>`;
+                    html += `<td style="border:none; width:10px;"><div class="strike-line"></div>`;
                 }
                 html += `</tr>`;
             }
