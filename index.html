@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BingoMaster - Älykäs bingontarkistus & lisäarvonta</title>
-    <!-- Html5-QRCode kirjasto -->
+    <title>BingoMaster - Älykäs bingontarkistus</title>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * {
@@ -20,17 +19,14 @@
             justify-content: center;
             align-items: center;
         }
-        /* pääkortti */
         .app-container {
             max-width: 1300px;
             width: 100%;
             background: rgba(255,248,225,0.95);
             border-radius: 3rem;
             padding: 1.5rem;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.6);
-            backdrop-filter: blur(2px);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.4);
         }
-        /* otsikko ja moodipainikkeet */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -48,7 +44,6 @@
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
         .mode-buttons {
             display: flex;
@@ -60,17 +55,14 @@
             font-weight: bold;
             padding: 0.5rem 1.2rem;
             border-radius: 60px;
-            font-size: 0.9rem;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .mode-btn.active {
             background: #f5b042;
             color: #1e3a2f;
             box-shadow: 0 0 0 2px #ffdd99;
         }
-        /* kaksi pääpaneelia (skannaus ja tulos) */
         .scan-panels {
             display: flex;
             flex-wrap: wrap;
@@ -82,15 +74,11 @@
             border-radius: 2rem;
             padding: 1.2rem;
             flex: 1;
-            min-width: 260px;
+            min-width: 280px;
             box-shadow: 0 8px 18px rgba(0,0,0,0.1);
-            border: 1px solid #ffd966;
         }
         .card h3 {
             margin-top: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
             color: #2c5a2e;
         }
         .qr-reader {
@@ -98,6 +86,7 @@
             border-radius: 1.5rem;
             overflow: hidden;
             background: #2c2c2c;
+            min-height: 250px;
         }
         .info-text {
             font-size: 0.8rem;
@@ -118,10 +107,6 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .setting-group label {
-            font-weight: bold;
         }
         select, button {
             background: #2b5e3b;
@@ -138,31 +123,23 @@
             padding: 1rem;
             overflow-x: auto;
         }
-        .board-title {
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-        }
         table.bingo-grid {
             margin: 0 auto;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         th {
             background: #d9b48b;
-            color: #2d2b20;
             padding: 10px;
-            font-size: 1.3rem;
-            width: 65px;
+            font-size: 1.2rem;
+            width: 60px;
         }
         td {
             border: 2px solid #f3cf93;
-            width: 65px;
-            height: 65px;
+            width: 60px;
+            height: 60px;
             text-align: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             background-color: #fffaf2;
             position: relative;
@@ -170,20 +147,14 @@
         .hit {
             background-color: #9bdd8c;
             border-radius: 50%;
-            box-shadow: inset 0 0 0 2px #2e7d32;
             color: #1b4d1b;
         }
         .joker {
             background-color: #ffd966;
-            position: relative;
         }
         .joker::after {
             content: "⭐";
-            font-size: 1.1rem;
             margin-left: 5px;
-        }
-        .row-strike {
-            position: relative;
         }
         .strike-line {
             position: absolute;
@@ -194,10 +165,9 @@
             left: 0;
             transform: translateY(-50%);
             pointer-events: none;
-            z-index: 5;
         }
         .verdict {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: bold;
             text-align: center;
             padding: 0.8rem;
@@ -214,7 +184,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
-            align-items: center;
+            margin: 1rem 0;
         }
         .participant-list {
             background: #ece4d5;
@@ -224,12 +194,37 @@
             overflow-y: auto;
             font-family: monospace;
         }
-        button:active {
-            transform: scale(0.97);
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
         }
-        .warning {
-            color: #b85c00;
-            font-size: 0.8rem;
+        .status-success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .status-warning {
+            background: #ffe0b2;
+            color: #e65100;
+        }
+        .manual-numbers {
+            margin-top: 0.8rem;
+            padding: 0.5rem;
+            background: #f5f0e0;
+            border-radius: 1rem;
+        }
+        .manual-input {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .manual-input input {
+            flex: 1;
+            padding: 0.4rem;
+            border-radius: 1rem;
+            border: 1px solid #ccc;
         }
         @media (max-width: 780px) {
             td, th { width: 45px; height: 45px; font-size: 0.9rem; }
@@ -247,7 +242,6 @@
         </div>
     </div>
 
-    <!-- Asetukset / tavoiterivit -->
     <div class="settings-area" id="settingsPanel">
         <div class="setting-group">
             <span>🎯 Tavoiterivien määrä:</span>
@@ -260,69 +254,72 @@
             </select>
         </div>
         <div class="setting-group" id="bigNote">
-            <span class="warning">⚠️ Iso Bingo: rivien tulee olla samasta 5x5-lohkosta (Ylä/Keski/Ala)</span>
+            <span class="status-warning" style="font-size:0.75rem;">⚠️ Iso bingo: rivit samasta 5x5-lohkosta</span>
         </div>
     </div>
 
-    <!-- Skannauspaneelit (normi bingo) ja lisäarvonta näytetään vuorotellen -->
     <div id="bingoSection">
         <div class="scan-panels">
             <div class="card">
                 <h3>📺 VAIHE 2: Skannaa TV (arvotut numerot)</h3>
                 <div id="tv-reader" class="qr-reader"></div>
-                <div class="info-text">QR-koodi TV:stä / huutajan laitteesta → sisältää arvotut numerot</div>
-                <div id="tvStatus" style="font-size:0.8rem; margin-top:8px;">⚪ Ei skannattu</div>
+                <div class="info-text">💰 QR-koodi sisältää arvotut numerot | Toimii: teksti, CSV, JSON, sekamuoto</div>
+                <div id="tvStatus" class="status-badge status-warning">⚡ Ei skannattu</div>
+                <div class="manual-numbers">
+                    <div style="font-size:0.75rem; font-weight:bold;">🔧 Tai syötä numerot käsin:</div>
+                    <div class="manual-input">
+                        <input type="text" id="manualNumbersInput" placeholder="Esim. 12,34,56,7,23,45" style="flex:2;">
+                        <button id="setManualNumbersBtn">Aseta numerot</button>
+                    </div>
+                </div>
             </div>
             <div class="card">
                 <h3>🎫 VAIHE 3: Skannaa bingolappu</h3>
                 <div id="ticket-reader" class="qr-reader"></div>
-                <div class="info-text">Lapun QR: B,I,N,G,O numerot + mahd. T (tähti=jokeri)</div>
-                <div id="ticketStatus" style="font-size:0.8rem; margin-top:8px;">⚪ Ei skannattu</div>
+                <div class="info-text">📄 Lapun QR: B:1,2,3,4,5 I:6,7,8,9,10 jne. T = tähti (jokeri)</div>
+                <div id="ticketStatus" class="status-badge status-warning">⚡ Ei skannattu</div>
             </div>
         </div>
         <div class="bingo-board" id="boardContainer">
-            <div class="board-title">🎯 Bingoruudukko (osin tähdet = jokeri)</div>
+            <div class="board-title">🎯 Bingoruudukko</div>
             <div id="dynamicBoard">-- Odotetaan lapun skannausta --</div>
         </div>
-        <div id="verdictBox" class="verdict">⚡ Tarkista TV & lappu</div>
+        <div id="verdictBox" class="verdict">📡 Skannaa TV ja bingolappu</div>
     </div>
 
-    <!-- Lisäarvonta-osio (piilotetaan oletus) -->
     <div id="extraSection" style="display: none;">
         <div class="card">
             <h3>🎲 LISÄARVONTA: Skannaa osallistujien QR-koodit</h3>
             <div id="extra-reader" class="qr-reader"></div>
-            <div class="info-text">QR-koodi sisältää 6-numeroisen tunnuksen. Samaa koodia ei voi lisätä kahdesti.</div>
-            <div id="extraScanFeedback" style="color:green; font-size:0.8rem;"></div>
+            <div id="extraScanFeedback" style="color:green; font-size:0.8rem; margin-top:0.5rem;"></div>
             <div class="draw-controls">
                 <button id="drawWinnerBtn">✨ SUORITA ARVONTA ✨</button>
                 <button id="clearParticipantsBtn">🗑️ Tyhjennä lista</button>
             </div>
-            <div><strong>Osallistujat (</strong><span id="participantCount">0</span><strong>)</strong></div>
+            <div><strong>Osallistujat (<span id="participantCount">0</span>)</strong></div>
             <div id="participantList" class="participant-list">Ei osallistujia</div>
-            <div id="winnerResult" style="margin-top: 1rem; font-weight: bold; background:#ffecb3; border-radius:2rem; padding:0.6rem;"></div>
+            <div id="winnerResult" style="margin-top:1rem; font-weight:bold; background:#ffecb3; border-radius:2rem; padding:0.6rem;"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // ---------- GLOBAALI TILA ----------
-    let currentMode = "small";   // "small", "big", "extra"
-    let tvNumbers = new Set();     // kaikki huudetut numerot (int)
-    let ticketData = null;         // { type: "small", grid: 5x5 matriisi numerot JA jokeritFlag }
-    let bigTicketData = null;      // isobingo: 3kpl 5x5 ruudukkoa (lista matriiseja)
-    let targetLines = 2;           // oletus 2 riviä
-    let currentGrids = [];          // renderöintiä varten: array 5x5 matriiseja (isossa 3 kpl)
+    // TILA
+    let currentMode = "small";
+    let tvNumbers = new Set();
+    let currentGrids = [];
+    let ticketParsed = null;     // array of 5x5 grids (objects)
+    let targetLines = 2;
     
     // Lisäarvonta
-    let participants = new Set();    // unique 6-digit koodi merkkijonoina
+    let participants = new Set();
     
-    // HTML5QR readerit (monta instanssia)
+    // Skannerit
     let tvReader = null;
     let ticketReader = null;
     let extraReader = null;
     
-    // DOM elementit
+    // DOM
     const modeSmallBtn = document.getElementById('modeSmallBtn');
     const modeBigBtn = document.getElementById('modeBigBtn');
     const modeExtraBtn = document.getElementById('modeExtraBtn');
@@ -330,156 +327,153 @@
     const extraSection = document.getElementById('extraSection');
     const settingsPanel = document.getElementById('settingsPanel');
     const targetRowsSelect = document.getElementById('targetRowsSelect');
-    const boardContainer = document.getElementById('dynamicBoard');
+    const dynamicBoard = document.getElementById('dynamicBoard');
     const verdictBox = document.getElementById('verdictBox');
     const tvStatusSpan = document.getElementById('tvStatus');
     const ticketStatusSpan = document.getElementById('ticketStatus');
     const bigNote = document.getElementById('bigNote');
+    const manualNumbersInput = document.getElementById('manualNumbersInput');
+    const setManualNumbersBtn = document.getElementById('setManualNumbersBtn');
     
-    // Apufunktiot
-    function updateModeUI() {
+    // ----- APUFUNKTIOT -----
+    function updateUIMode() {
         if (currentMode === 'extra') {
             bingoSection.style.display = 'none';
             extraSection.style.display = 'block';
             settingsPanel.style.display = 'none';
-            // pysäytä bingoskannerit jos pyörii
-            if (tvReader) { try{ tvReader.stop(); }catch(e){} }
-            if (ticketReader) { try{ ticketReader.stop(); }catch(e){} }
+            if (tvReader) { try{ tvReader.stop(); }catch(e){} tvReader = null; }
+            if (ticketReader) { try{ ticketReader.stop(); }catch(e){} ticketReader = null; }
             startExtraScanner();
         } else {
             bingoSection.style.display = 'block';
             extraSection.style.display = 'none';
             settingsPanel.style.display = 'flex';
-            if (extraReader) { try{ extraReader.stop(); }catch(e){} }
-            // käynnistä tv- ja ticket-skannerit
+            if (extraReader) { try{ extraReader.stop(); }catch(e){} extraReader = null; }
             startTvScanner();
             startTicketScanner();
-            // resetoi bingodataa jos mode vaihtuu (tieto vanhentuu)
-            resetBingoData();
         }
-        if (currentMode === 'big') {
-            bigNote.style.display = 'flex';
-        } else {
-            bigNote.style.display = 'none';
-        }
+        bigNote.style.display = (currentMode === 'big') ? 'flex' : 'none';
         targetRowsSelect.disabled = (currentMode === 'extra');
     }
     
-    function resetBingoData() {
-        tvNumbers.clear();
-        ticketData = null;
-        bigTicketData = null;
-        currentGrids = [];
-        updateBoardRender();
-        tvStatusSpan.innerHTML = "⚪ Ei skannattu (TV)";
-        ticketStatusSpan.innerHTML = "⚪ Ei skannattu (lappu)";
-        verdictBox.innerHTML = "📡 Odotetaan skannauksia...";
+    // TEHOSTETTU NUMEROIDEN POIMINTA QR-TEKSTISTÄ
+    function extractAllNumbers(text) {
+        // Etsitään kaikki numerot 1-75 (bingo tyypillinen)
+        // Tunnistetaan myös pilkuilla, välilyönneillä, JSON, väliviivat jne.
+        let allMatches = text.match(/\b([1-9]|[1-6][0-9]|75)\b/g);
+        if (!allMatches) return [];
+        let numbers = allMatches.map(Number).filter(n => n >= 1 && n <= 75);
+        // Poistetaan duplikaatit
+        return [...new Set(numbers)];
     }
     
-    // numeroiden erotus qr tekstistä (etsii kaikki numerot)
-    function extractNumbersFromText(text) {
-        const matches = text.match(/\d+/g);
-        if (!matches) return [];
-        return matches.map(Number).filter(n => n >= 1 && n <= 75); // bingo rajoissa
-    }
-    
-    // TV-skannaus callback
+    // Skannaus onnistui (TV)
     function onTvScanSuccess(decodedText) {
-        const numbers = extractNumbersFromText(decodedText);
+        console.log("TV QR skannattu:", decodedText.substring(0, 100));
+        const numbers = extractAllNumbers(decodedText);
         if (numbers.length === 0) {
-            tvStatusSpan.innerHTML = "⚠️ QR ei sisältänyt numeroita!";
+            tvStatusSpan.innerHTML = "⚠️ QR ei sisältänyt numeroita (1-75)";
+            tvStatusSpan.className = "status-badge status-warning";
             return;
         }
         tvNumbers.clear();
         numbers.forEach(n => tvNumbers.add(n));
-        tvStatusSpan.innerHTML = `✅ Skannattu! ${tvNumbers.size} uniikkia numeroa huudettu.`;
-        calculateAndRenderBingo();
+        tvStatusSpan.innerHTML = `✅ Skannattu! ${tvNumbers.size} numeroa huudettu: ${Array.from(tvNumbers).slice(0,15).join(', ')}${tvNumbers.size>15?'...':''}`;
+        tvStatusSpan.className = "status-badge status-success";
+        calculateAndRender();
     }
     
-    // Bingolapun QR jäsennys (tukee pieni ja iso bingo)
-    function parseTicketQR(text) {
-        // Oletus: QR sisältää formaatin "B:1,2,3,4,5 I:6,7,8,9,10 ..." tai isossa bingossa "TOP: ... MID: ... BOT: ..."
-        // tai sisältää merkinnän T tähdelle. Yksinkertaistettu robusti parseri:
-        // Etsitään B, I, N, G, O kentät ja pilkotaan numerot. 
-        // Iso bingo tunnistetaan jos tekstissä on esim "TOP" "MIDDLE" "BOTTOM" tai kolme blokkia
-        let isBig = false;
-        if (text.includes("TOP") || text.includes("MID") || text.includes("BOT") || (text.match(/(B|I|N|G|O)/gi) || []).length > 10) {
-            // karkea arvio isobingosta
-            isBig = true;
+    // Manuaalinen numeroiden syöttö
+    function setManualNumbers() {
+        let raw = manualNumbersInput.value;
+        if (!raw.trim()) {
+            tvStatusSpan.innerHTML = "⚠️ Syötä numeroita pilkulla erotettuna";
+            tvStatusSpan.className = "status-badge status-warning";
+            return;
         }
-        // Pakotetaan iso vain jos mode big
-        if (currentMode === 'big') isBig = true;
+        let numbers = raw.split(/[ ,;]+/).map(Number).filter(n => !isNaN(n) && n>=1 && n<=75);
+        if (numbers.length === 0) {
+            tvStatusSpan.innerHTML = "⚠️ Ei kelvollisia numeroita (1-75)";
+            return;
+        }
+        tvNumbers.clear();
+        numbers.forEach(n => tvNumbers.add(n));
+        tvStatusSpan.innerHTML = `📝 Manuaalinen: ${tvNumbers.size} numeroa asetettu`;
+        tvStatusSpan.className = "status-badge status-success";
+        calculateAndRender();
+    }
+    
+    // PARSE LAPUN QR (tukee pieni ja iso bingo)
+    function parseTicketQr(text) {
+        // Yritetään tunnistaa B, I, N, G, O sarakkeet
+        let lines = text.toUpperCase().replace(/\r/g, '').split(/\n/);
+        let fullText = text.toUpperCase();
         
-        try {
-            if (!isBig) {
-                // pieni 5x5
-                let grid = Array(5).fill().map(() => Array(5).fill(null));
-                const letters = ['B','I','N','G','O'];
-                for (let col = 0; col < letters.length; col++) {
-                    const letter = letters[col];
-                    const regex = new RegExp(`${letter}:([\\d,T, ]+)`, 'i');
-                    const match = text.match(regex);
-                    if (match) {
-                        let parts = match[1].split(/[ ,]+/);
-                        for (let row = 0; row < 5 && row < parts.length; row++) {
-                            let val = parts[row].trim().toUpperCase();
-                            if (val === 'T' || val === '★' || val === 'STAR') {
-                                grid[row][col] = { value: 0, isJoker: true };
-                            } else {
-                                let num = parseInt(val, 10);
-                                if (!isNaN(num)) grid[row][col] = { value: num, isJoker: false };
-                                else grid[row][col] = { value: -1, isJoker: false };
-                            }
+        // Tarkistetaan onko iso bingo (monta B I N G O osiota)
+        let bingoBlocks = [];
+        let blockPattern = /(?:B[:;,\s]*[\dT, ]+)(?:I[:;,\s]*[\dT, ]+)(?:N[:;,\s]*[\dT, ]+)(?:G[:;,\s]*[\dT, ]+)(?:O[:;,\s]*[\dT, ]+)/gi;
+        let matches = [...fullText.matchAll(blockPattern)];
+        if (matches.length >= 3 && currentMode === 'big') {
+            for (let i=0; i<3; i++) {
+                let blockText = matches[i][0];
+                let grid = parseSingleGrid(blockText);
+                if (grid) bingoBlocks.push(grid);
+            }
+        } 
+        // Jos ei löydy montaa blokkia, mutta iso tila, yritä erottaa
+        else if (currentMode === 'big') {
+            // Fallback: yritä etsiä kolme erillistä B-riviä
+            let parts = fullText.split(/(?:TOP|MIDDLE|BOTTOM|YLA|KESKI|ALA|\d+\.\s*)/i);
+            let grids = [];
+            for (let part of parts) {
+                if (part.includes('B') && part.includes('I') && part.includes('N') && grids.length<3) {
+                    let g = parseSingleGrid(part);
+                    if(g) grids.push(g);
+                }
+            }
+            while(grids.length < 3) grids.push(generateDummyGrid());
+            bingoBlocks = grids.slice(0,3);
+        } 
+        else {
+            // Pieni bingo
+            let single = parseSingleGrid(fullText);
+            if (single) bingoBlocks = [single];
+            else bingoBlocks = [generateDummyGrid()];
+        }
+        
+        if (bingoBlocks.length === 0) return null;
+        return bingoBlocks;
+    }
+    
+    function parseSingleGrid(blockText) {
+        let grid = Array(5).fill().map(() => Array(5).fill(null));
+        const letters = ['B','I','N','G','O'];
+        for (let col = 0; col < letters.length; col++) {
+            const letter = letters[col];
+            // Etsi esim "B:1,2,3,4,5" tai "B 1 2 3 4 5" tai "B1,2,3,4,5"
+            let regex = new RegExp(`${letter}[\\s:;,]*([\\dT, ]+)`, 'i');
+            let match = blockText.match(regex);
+            if (match) {
+                let values = match[1].split(/[ ,;]+/);
+                for (let row = 0; row < 5 && row < values.length; row++) {
+                    let val = values[row].trim().toUpperCase();
+                    if (val === 'T' || val === '★' || val === 'STAR' || val === '*') {
+                        grid[row][col] = { value: 0, isJoker: true };
+                    } else {
+                        let num = parseInt(val, 10);
+                        if (!isNaN(num) && num >= 1 && num <= 75) {
+                            grid[row][col] = { value: num, isJoker: false };
+                        } else {
+                            grid[row][col] = { value: -1, isJoker: false };
                         }
                     }
                 }
-                // tarkistetaan että kaikki täytetty
-                return { type: "small", grids: [grid] };
-            } else {
-                // Iso bingo: oletetaan kolme ruudukkoa ylhäältä alas. Yritetään parsia kolme osaa
-                let blocks = [];
-                // Etsi blokit sanastolla TOP, MIDDLE, BOTTOM tai 1. block B,I,N,G,O , toinen...
-                const blockRegex = /(?:TOP|MIDDLE|BOTTOM|YLA|KESKI|ALA)[\s:]*([\d,T, \n]+)/gi;
-                let matches = [...text.matchAll(blockRegex)];
-                if (matches.length === 3) {
-                    for (let idx=0; idx<3; idx++) {
-                        let blockText = matches[idx][1];
-                        blocks.push(parseSmallGridFromRaw(blockText));
-                    }
-                } else {
-                    // yritä tunnistaa kolme peräkkäistä 5-rivistä settiä
-                    let allNumbers = text.split(/[\n\r,;]+/);
-                    // ei niin robusti, mutta apufallback: luodaan dummy jotta demo näyttää
-                    for (let b=0;b<3;b++) blocks.push(generateDummyGrid());
-                }
-                if (blocks.length!==3) blocks = [generateDummyGrid(), generateDummyGrid(), generateDummyGrid()];
-                return { type: "big", grids: blocks };
             }
-        } catch(e) {
-            console.warn(e);
-            return null;
         }
-    }
-    
-    function parseSmallGridFromRaw(rawText) {
-        let grid = Array(5).fill().map(()=>Array(5).fill({value:0, isJoker:false}));
-        const lines = rawText.split(/[ ,\n]+/);
-        let colIndex=0, rowIndex=0;
-        for (let token of lines) {
-            if (token.toUpperCase()==='B'||token.toUpperCase()==='I'||token.toUpperCase()==='N'||token.toUpperCase()==='G'||token.toUpperCase()==='O') {
-                colIndex = ['B','I','N','G','O'].indexOf(token.toUpperCase());
-                rowIndex = 0;
-                continue;
-            }
-            if (rowIndex<5 && colIndex>=0) {
-                let clean = token.trim().toUpperCase();
-                if (clean === 'T' || clean === '★') {
-                    grid[rowIndex][colIndex] = { value: 0, isJoker: true };
-                } else {
-                    let num = parseInt(clean,10);
-                    if (!isNaN(num)) grid[rowIndex][colIndex] = { value: num, isJoker: false };
-                }
-                rowIndex++;
+        // Täytä tyhjät solut varalla
+        for (let r=0;r<5;r++){
+            for(let c=0;c<5;c++){
+                if(!grid[r][c]) grid[r][c] = { value: (r*5+c+1), isJoker: false };
             }
         }
         return grid;
@@ -489,223 +483,212 @@
         let g = [];
         for(let i=0;i<5;i++){
             let row=[];
-            for(let j=0;j<5;j++) row.push({value: (i*5+j+1)%75+1, isJoker: (i===2 && j===2)});
+            for(let j=0;j<5;j++) row.push({ value: (i*5+j+1)%75+1, isJoker: (i===2 && j===2) });
             g.push(row);
         }
         return g;
     }
     
     function onTicketScanSuccess(decodedText) {
-        const parsed = parseTicketQR(decodedText);
-        if (!parsed) {
+        console.log("Lappu QR skannattu:", decodedText.substring(0,80));
+        let parsed = parseTicketQr(decodedText);
+        if (!parsed || parsed.length === 0) {
             ticketStatusSpan.innerHTML = "❌ Virheellinen bingolapun QR";
+            ticketStatusSpan.className = "status-badge status-warning";
             return;
         }
-        if (currentMode === 'small' && parsed.type !== 'small') {
-            ticketStatusSpan.innerHTML = "⚠️ Skannattu iso lappu, mutta olet pienessä tilassa";
+        if (currentMode === 'small' && parsed.length > 1) {
+            ticketStatusSpan.innerHTML = "⚠️ Skannattu iso lappu, vaihda isoon bingoon";
             return;
         }
-        if (currentMode === 'big' && parsed.type !== 'big') {
-            ticketStatusSpan.innerHTML = "⚠️ Skannattu pieni lappu, vaihda isoon bingoon";
+        if (currentMode === 'big' && parsed.length === 1) {
+            ticketStatusSpan.innerHTML = "⚠️ Skannattu pieni lappu, vaihda pieneen bingoon";
             return;
         }
-        if (parsed.type === 'small') {
-            ticketData = parsed.grids[0];
-            bigTicketData = null;
-            currentGrids = [ticketData];
-        } else {
-            bigTicketData = parsed.grids;
-            currentGrids = bigTicketData;
-            ticketData = null;
-        }
-        ticketStatusSpan.innerHTML = `✅ ${parsed.type==='small' ? 'Pieni bingo' : 'Iso bingo (3 lohkoa)'} skannattu onnistuneesti!`;
-        calculateAndRenderBingo();
+        currentGrids = parsed;
+        ticketStatusSpan.innerHTML = `✅ ${currentGrids.length} ruudukkoa ladattu onnistuneesti!`;
+        ticketStatusSpan.className = "status-badge status-success";
+        calculateAndRender();
     }
     
-    // Lasketaan rivit ja aito bingo
-    function calculateAndRenderBingo() {
-        if (!currentGrids || currentGrids.length===0) {
-            boardContainer.innerHTML = '<div>🔍 Skannaa ensin bingolappu</div>';
+    function calculateAndRender() {
+        if (!currentGrids || currentGrids.length === 0) {
+            dynamicBoard.innerHTML = '<div>🔍 Skannaa ensin bingolappu (vaihe 3)</div>';
             verdictBox.innerHTML = "📋 Ei bingolapun tietoja";
             return;
         }
-        // tarkistetaan jokainen ruudukko (isossa 3)
-        let allGridsHits = [];
-        let totalCompleteRows = 0;
+        if (tvNumbers.size === 0) {
+            // Näytetään ruudukko ilman osumia
+            renderBoardsWithHits(currentGrids, []);
+            verdictBox.innerHTML = "🎬 Skannaa TV (tai syötä numerot) nähdäksesi osumat";
+            return;
+        }
+        
+        // Lasketaan osumat jokaiselle ruudukolle
+        let allHitsMatrices = [];
         let rowsPerGrid = [];
-        for (let gIdx=0; gIdx<currentGrids.length; gIdx++) {
-            const grid = currentGrids[gIdx];
+        
+        for (let g=0; g<currentGrids.length; g++) {
+            let grid = currentGrids[g];
             let hitMatrix = Array(5).fill().map(()=>Array(5).fill(false));
-            // täytä osumat ja jokerit
             for(let r=0;r<5;r++){
                 for(let c=0;c<5;c++){
-                    const cell = grid[r][c];
-                    if (cell.isJoker) hitMatrix[r][c]=true;
-                    else if (tvNumbers.has(cell.value)) hitMatrix[r][c]=true;
+                    let cell = grid[r][c];
+                    if (cell.isJoker) hitMatrix[r][c] = true;
+                    else if (tvNumbers.has(cell.value)) hitMatrix[r][c] = true;
                 }
             }
-            // lasketaan täydet rivit
-            let fullRowsCount=0;
+            allHitsMatrices.push(hitMatrix);
+            let fullRows = 0;
             for(let r=0;r<5;r++){
-                let full=true;
-                for(let c=0;c<5;c++) if(!hitMatrix[r][c]){full=false;break;}
-                if(full) fullRowsCount++;
+                if(hitMatrix[r].every(v=>v===true)) fullRows++;
             }
-            rowsPerGrid.push(fullRowsCount);
-            totalCompleteRows += fullRowsCount;
-            allGridsHits.push(hitMatrix);
+            rowsPerGrid.push(fullRows);
         }
         
-        // isossa bingossa tarkistetaan että rivit ovat samasta lohkosta (yhdestä ruudukosta)
+        // Tuomio
+        let target = parseInt(targetRowsSelect.value);
         let bingoAito = false;
-        let bingoMsg = "";
+        let verdictMsg = "";
         if (currentMode === 'small') {
-            let required = parseInt(targetRowsSelect.value);
-            if(totalCompleteRows >= required) bingoAito = true;
-            bingoMsg = bingoAito ? "🏆 BINGO ON AITO! 🏆" : "❌ EI BINGOA VIELÄ ❌";
-            if(!bingoAito) bingoMsg += ` (täysiä rivejä ${totalCompleteRows}/${required})`;
-        } 
-        else { // iso bingo: rivien pitää olla samasta ruudukosta
-            let required = parseInt(targetRowsSelect.value);
-            let bestGridRows = Math.max(...rowsPerGrid);
-            if(bestGridRows >= required) bingoAito = true;
-            bingoMsg = bingoAito ? "🏆 BINGO ON AITO! 🏆" : "❌ EI BINGOA VIELÄ (ei tarpeeksi rivejä samassa lohkossa)";
-            bingoMsg += `<br>📊 Ylä:${rowsPerGrid[0]} | Keski:${rowsPerGrid[1]} | Ala:${rowsPerGrid[2]} | Tavoite:${required} samasta`;
+            let totalRows = rowsPerGrid[0] || 0;
+            bingoAito = (totalRows >= target);
+            verdictMsg = bingoAito ? "🏆 BINGO ON AITO! 🏆" : `❌ EI BINGOA VIELÄ (${totalRows}/${target} riviä)`;
+        } else {
+            let best = Math.max(...rowsPerGrid);
+            bingoAito = (best >= target);
+            verdictMsg = bingoAito ? "🏆 BINGO ON AITO! 🏆" : `❌ EI BINGOA VIELÄ`;
+            verdictMsg += `<br><small>📊 Ylä:${rowsPerGrid[0] || 0} | Keski:${rowsPerGrid[1] || 0} | Ala:${rowsPerGrid[2] || 0} | Paras:${best}/${target}</small>`;
         }
-        verdictBox.innerHTML = bingoMsg;
-        
-        // RENDERÖINTI visuaalinen punaisella viivalla
-        renderBoardsWithStrikes(allGridsHits, currentGrids);
+        verdictBox.innerHTML = verdictMsg;
+        renderBoardsWithHits(currentGrids, allHitsMatrices);
     }
     
-    function renderBoardsWithStrikes(hitsMatrices, originalGrids) {
+    function renderBoardsWithHits(grids, hitsMatrices) {
         let html = '';
-        for(let g=0; g<originalGrids.length; g++) {
-            if(originalGrids.length>1) html += `<h4 style="margin-top:1rem;">${g===0?'Yläruudukko':g===1?'Keskiruudukko':'Alaruudukko'}</h4>`;
+        for (let g=0; g<grids.length; g++) {
+            if (grids.length > 1) {
+                let title = g===0 ? '🔷 YLÄRUUDUKKO' : (g===1 ? '🔶 KESKIRUUDUKKO' : '🔴 ALARUUDUKKO');
+                html += `<h4 style="margin-top:1.2rem; margin-bottom:0.3rem;">${title}</h4>`;
+            }
             html += `<table class="bingo-grid"><thead><tr>${['B','I','N','G','O'].map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
-            const grid = originalGrids[g];
-            const hits = hitsMatrices[g];
-            for(let r=0;r<5;r++){
-                let rowHasFull = true;
-                for(let c=0;c<5;c++) if(!hits[r][c]) rowHasFull=false;
+            let grid = grids[g];
+            let hits = (hitsMatrices.length > g) ? hitsMatrices[g] : null;
+            
+            for(let r=0; r<5; r++) {
+                let rowFull = hits ? hits[r].every(v=>v===true) : false;
                 html += `<tr style="position:relative;">`;
-                for(let c=0;c<5;c++){
-                    const cell = grid[r][c];
-                    let cellContent = "";
-                    let additionalClass = "";
-                    if(cell.isJoker) {
-                        cellContent = "⭐";
-                        additionalClass = "joker";
-                    } else {
-                        cellContent = cell.value;
-                    }
-                    if(hits[r][c] && !cell.isJoker) additionalClass = "hit";
-                    else if(hits[r][c] && cell.isJoker) additionalClass = "joker";
-                    html += `<td class="${additionalClass}">${cellContent}</td>`;
+                for(let c=0; c<5; c++) {
+                    let cell = grid[r][c];
+                    let displayValue = cell.isJoker ? "⭐" : (cell.value > 0 ? cell.value : "?");
+                    let cellClass = "";
+                    if (cell.isJoker) cellClass = "joker";
+                    if (hits && hits[r][c] && !cell.isJoker) cellClass = "hit";
+                    html += `<td class="${cellClass}">${displayValue}</td>`;
                 }
-                if(rowHasFull){
-                    html += `<td style="border:none; position:relative;"><div class="strike-line" style="position:absolute; width:100%; height:3px; background:red; top:50%; left:0;"></div></td>`;
+                if (rowFull && hits) {
+                    html += `<td style="border:none; position:relative; width:10px;"><div class="strike-line"></div></td>`;
                 }
                 html += `</tr>`;
             }
             html += `</tbody></table>`;
         }
-        boardContainer.innerHTML = html;
+        dynamicBoard.innerHTML = html;
     }
     
-    function updateBoardRender() {
-        if ((!ticketData && !bigTicketData) || currentGrids.length===0) {
-            boardContainer.innerHTML = '<div>🃏 Skannaa bingolappu (vaihe 3)</div>';
-            return;
+    // Skannerien hallinta
+    function startTvScanner() {
+        if (tvReader) {
+            try { tvReader.stop(); } catch(e) {}
+            tvReader = null;
         }
-        calculateAndRenderBingo();
+        const tvDiv = document.getElementById('tv-reader');
+        if (tvDiv) tvDiv.innerHTML = '<div id="tv-reader-inner" style="width:100%;"></div>';
+        tvReader = new Html5Qrcode("tv-reader-inner");
+        tvReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 300 }, 
+            onTvScanSuccess, 
+            (err) => { /* hiljainen */ }
+        ).catch(err => console.log("Kamera käynnistys epäonnistui TV", err));
     }
     
-    // Lisäarvonta koodi
+    function startTicketScanner() {
+        if (ticketReader) {
+            try { ticketReader.stop(); } catch(e) {}
+            ticketReader = null;
+        }
+        const ticketDiv = document.getElementById('ticket-reader');
+        if (ticketDiv) ticketDiv.innerHTML = '<div id="ticket-reader-inner" style="width:100%;"></div>';
+        ticketReader = new Html5Qrcode("ticket-reader-inner");
+        ticketReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 300 },
+            onTicketScanSuccess,
+            (err) => {}
+        ).catch(err => console.log("Kamera lappu epäonnistui", err));
+    }
+    
     function startExtraScanner() {
-        if (extraReader) { try{ extraReader.stop(); }catch(e){} }
-        const extraReaderDiv = document.getElementById('extra-reader');
-        extraReaderDiv.innerHTML = '';
-        extraReader = new Html5Qrcode("extra-reader");
-        extraReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 300 }, (decodedText) => {
-            let code = decodedText.trim();
-            let sixDigits = code.match(/\d{6}/);
-            if (sixDigits) {
-                let participantId = sixDigits[0];
-                if (!participants.has(participantId)) {
-                    participants.add(participantId);
-                    document.getElementById('extraScanFeedback').innerHTML = `✅ Lisätty: ${participantId}`;
-                    updateParticipantListUI();
-                    setTimeout(()=>{document.getElementById('extraScanFeedback').innerHTML = '';},1500);
+        if (extraReader) {
+            try { extraReader.stop(); } catch(e) {}
+            extraReader = null;
+        }
+        const extraDiv = document.getElementById('extra-reader');
+        if (extraDiv) extraDiv.innerHTML = '<div id="extra-reader-inner" style="width:100%;"></div>';
+        extraReader = new Html5Qrcode("extra-reader-inner");
+        extraReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 300 },
+            (decodedText) => {
+                let match = decodedText.match(/\d{6}/);
+                if (match) {
+                    let code = match[0];
+                    if (!participants.has(code)) {
+                        participants.add(code);
+                        document.getElementById('extraScanFeedback').innerHTML = `✅ Lisätty: ${code}`;
+                        updateParticipantUI();
+                        setTimeout(()=>{document.getElementById('extraScanFeedback').innerHTML = '';}, 1500);
+                    } else {
+                        document.getElementById('extraScanFeedback').innerHTML = `⚠️ Koodi ${code} jo listalla`;
+                    }
                 } else {
-                    document.getElementById('extraScanFeedback').innerHTML = `⚠️ Koodi ${participantId} jo listalla`;
+                    document.getElementById('extraScanFeedback').innerHTML = `❌ Ei 6-numeroista koodia`;
                 }
-            } else {
-                document.getElementById('extraScanFeedback').innerHTML = `❌ Ei 6-numeroista koodia`;
-            }
-        }, (err) => {});
+            },
+            (err) => {}
+        ).catch(e => console.log("extra kamera error", e));
     }
     
-    function updateParticipantListUI() {
-        const arr = Array.from(participants);
-        const container = document.getElementById('participantList');
-        if(arr.length===0) container.innerHTML = "Ei osallistujia";
-        else container.innerHTML = arr.map(p=>`🎟️ ${p}`).join('<br>');
+    function updateParticipantUI() {
+        let arr = Array.from(participants);
+        document.getElementById('participantList').innerHTML = arr.length ? arr.map(p=>`🎟️ ${p}`).join('<br>') : "Ei osallistujia";
         document.getElementById('participantCount').innerText = arr.length;
     }
     
     function drawWinner() {
-        if(participants.size===0) {
-            document.getElementById('winnerResult').innerHTML = "❌ Ei osallistujia! Skannaa ensin koodeja.";
-            return;
-        }
         let arr = Array.from(participants);
+        if(arr.length===0) { document.getElementById('winnerResult').innerHTML = "❌ Ei osallistujia!"; return; }
         let duration = 800;
-        let interval = 80;
-        let startTime = Date.now();
+        let interval = 70;
         let rolling = setInterval(()=>{
-            let randIdx = Math.floor(Math.random() * arr.length);
-            document.getElementById('winnerResult').innerHTML = `🎲 Arvotaan... ${arr[randIdx]} 🎲`;
+            let rand = arr[Math.floor(Math.random()*arr.length)];
+            document.getElementById('winnerResult').innerHTML = `🎲 Arvotaan... ${rand}`;
         }, interval);
         setTimeout(()=>{
             clearInterval(rolling);
-            let finalWinner = arr[Math.floor(Math.random() * arr.length)];
-            document.getElementById('winnerResult').innerHTML = `🏆 VOITTAJA: ${finalWinner} 🏆`;
+            let winner = arr[Math.floor(Math.random()*arr.length)];
+            document.getElementById('winnerResult').innerHTML = `🏆 VOITTAJA: ${winner} 🏆`;
         }, duration);
     }
     
-    function clearParticipants() {
-        participants.clear();
-        updateParticipantListUI();
-        document.getElementById('winnerResult').innerHTML = "";
-    }
-    
-    // Skannerien aloitus
-    function startTvScanner() {
-        if (tvReader) { try{ tvReader.stop(); }catch(e){} }
-        const tvDiv = document.getElementById('tv-reader');
-        if(tvDiv) tvDiv.innerHTML = '';
-        tvReader = new Html5Qrcode("tv-reader");
-        tvReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onTvScanSuccess, (err)=>{});
-    }
-    function startTicketScanner() {
-        if (ticketReader) { try{ ticketReader.stop(); }catch(e){} }
-        const ticketDiv = document.getElementById('ticket-reader');
-        if(ticketDiv) ticketDiv.innerHTML = '';
-        ticketReader = new Html5Qrcode("ticket-reader");
-        ticketReader.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onTicketScanSuccess, (err)=>{});
-    }
+    function clearParticipants() { participants.clear(); updateParticipantUI(); document.getElementById('winnerResult').innerHTML = ""; }
     
     // Eventit
-    modeSmallBtn.addEventListener('click', ()=>{ currentMode='small'; modeSmallBtn.classList.add('active'); modeBigBtn.classList.remove('active'); modeExtraBtn.classList.remove('active'); updateModeUI(); resetBingoData(); });
-    modeBigBtn.addEventListener('click', ()=>{ currentMode='big'; modeBigBtn.classList.add('active'); modeSmallBtn.classList.remove('active'); modeExtraBtn.classList.remove('active'); updateModeUI(); resetBingoData(); });
-    modeExtraBtn.addEventListener('click', ()=>{ currentMode='extra'; modeExtraBtn.classList.add('active'); modeSmallBtn.classList.remove('active'); modeBigBtn.classList.remove('active'); updateModeUI(); });
-    targetRowsSelect.addEventListener('change', (e)=>{ targetLines = parseInt(e.target.value); if(currentMode!=='extra') calculateAndRenderBingo(); });
+    modeSmallBtn.onclick = () => { currentMode='small'; modeSmallBtn.classList.add('active'); modeBigBtn.classList.remove('active'); modeExtraBtn.classList.remove('active'); updateUIMode(); currentGrids=[]; tvNumbers.clear(); calculateAndRender(); };
+    modeBigBtn.onclick = () => { currentMode='big'; modeBigBtn.classList.add('active'); modeSmallBtn.classList.remove('active'); modeExtraBtn.classList.remove('active'); updateUIMode(); currentGrids=[]; tvNumbers.clear(); calculateAndRender(); };
+    modeExtraBtn.onclick = () => { currentMode='extra'; modeExtraBtn.classList.add('active'); modeSmallBtn.classList.remove('active'); modeBigBtn.classList.remove('active'); updateUIMode(); };
+    targetRowsSelect.onchange = () => calculateAndRender();
+    setManualNumbersBtn.onclick = setManualNumbers;
     document.getElementById('drawWinnerBtn')?.addEventListener('click', drawWinner);
     document.getElementById('clearParticipantsBtn')?.addEventListener('click', clearParticipants);
     
-    // alustus
-    updateModeUI();
+    // Aloitus
+    updateUIMode();
 </script>
 </body>
 </html>
