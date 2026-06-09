@@ -398,61 +398,90 @@
         return [...new Set(matches.map(Number))];
     }
     
-    // ----- KORJATTU: SÄILYTETÄÄN TÄYSIN QR:N ANTAMA JÄRJESTYS -----
-    // QR antaa: B: [1. numero, 2. numero, 3. numero,...] (ylhäältä alas)
-    //         I: [1. numero, 2. numero, ...]
-    //         N: ...
-    //         G: ...
-    //         O: ...
+    // ----- QR-KOODI LUKEE NUMEROT SARAKKEITTAIN: B (ylhäältä alas), sitten I, N, G, O -----
+    // Tuetaan kahta formaattia:
+    //   1) Merkitty: "B:1,5,3,T,2 I:16,20,..." tai "B 1 5 3 T 2 I 16 20..."
+    //   2) Pelkkä numerosarja: "1,5,3,0,2,16,20,..." (5 tai 15 numeroa per sarake)
     function parseTicketQR(text) {
-        let upperText = text.toUpperCase();
+        let upperText = text.toUpperCase().trim();
         debugInfo.innerHTML = "📄 Raaka QR: " + text.substring(0, 200);
         
-        // Etsi kaikki B, I, N, G, O lohkot ja niiden numerot JÄRJESTYKSESSÄ
         let letters = ['B', 'I', 'N', 'G', 'O'];
-        let allColumns = []; // jokainen sarake sisältää listan {value, isJoker} järjestyksessä
+        let allColumns = [];
         
-        for (let colIdx = 0; colIdx < letters.length; colIdx++) {
-            let letter = letters[colIdx];
-            // Etsi kuvio: "B: 1,5,6,2,3,4,7,8,9,10,12,11,15,14,13" tms
-            let patterns = [
-                new RegExp(`${letter}[\\s:;]*([^BINGO]+)`, 'i'),
-                new RegExp(`${letter}([\\dT, ]+)`, 'i')
-            ];
-            
-            let numbersStr = null;
-            for (let pattern of patterns) {
-                let match = upperText.match(pattern);
+        // --- Formaatti 1: Kirjainmerkitty (B: ... I: ... N: ... G: ... O: ...) ---
+        // Tarkistetaan onko QR:ssa B ja I kirjaimet erillisesti
+        let hasLabels = /\bB[\s:;,]/.test(upperText) && /\bI[\s:;,]/.test(upperText);
+        
+        if (hasLabels) {
+            debugInfo.innerHTML += '<br>🔤 Formaatti: Kirjainmerkitty (B:... I:... N:... G:... O:...)';
+            for (let colIdx = 0; colIdx < letters.length; colIdx++) {
+                let letter = letters[colIdx];
+                // Etsi kirjaimen jälkeiset numerot ennen seuraavaa kirjainta tai loppuun
+                let nextLetters = letters.slice(colIdx + 1).join('|');
+                let pat = nextLetters
+                    ? new RegExp(`\\b${letter}[\\s:;,]*([\\dT★* ,;]+?)(?=\\b(?:${nextLetters})\\b|$)`, 'i')
+                    : new RegExp(`\\b${letter}[\\s:;,]*([\\dT★* ,;]+)$`, 'i');
+                let match = upperText.match(pat);
+                let columnItems = [];
                 if (match) {
-                    numbersStr = match[1];
-                    break;
-                }
-            }
-            
-            let columnItems = [];
-            if (numbersStr) {
-                // Jaa numerot pilkuilla, välilyönneillä, puolipisteillä, mutta säilytä järjestys
-                let parts = numbersStr.split(/[ ,;]+/);
-                for (let part of parts) {
-                    let val = part.trim().toUpperCase();
-                    if (val === 'T' || val === '★' || val === 'STAR' || val === '*') {
-                        columnItems.push({ value: 0, isJoker: true });
-                    } else {
-                        let num = parseInt(val, 10);
-                        if (!isNaN(num) && num >= 1 && num <= 75) {
-                            columnItems.push({ value: num, isJoker: false });
+                    let parts = match[1].split(/[ ,;]+/);
+                    for (let part of parts) {
+                        let val = part.trim().toUpperCase();
+                        if (val === 'T' || val === '★' || val === 'STAR' || val === '*' || val === '0') {
+                            columnItems.push({ value: 0, isJoker: true });
+                        } else {
+                            let num = parseInt(val, 10);
+                            if (!isNaN(num) && num >= 1 && num <= 75) {
+                                columnItems.push({ value: num, isJoker: false });
+                            }
                         }
                     }
                 }
+                if (columnItems.length === 0) {
+                    for (let i = 0; i < 5; i++) columnItems.push({ value: (colIdx * 10 + i + 1) % 75 + 1, isJoker: false });
+                }
+                allColumns.push(columnItems);
             }
-            
-            // Jos sarake on tyhjä, luo dummy
-            if (columnItems.length === 0) {
-                for (let i = 0; i < 5; i++) {
-                    columnItems.push({ value: (colIdx * 10 + i + 1) % 75 + 1, isJoker: false });
+        } else {
+            // --- Formaatti 2: Pelkkä numerosarja, sarakejärjestyksessä B→I→N→G→O ---
+            // Joker voi olla 0, T, ★, *
+            debugInfo.innerHTML += '<br>🔢 Formaatti: Numerosarja (B-sarake ensin, sitten I, N, G, O)';
+            let items = [];
+            // Korvaa jokerimerkinnät nollalla
+            let normalized = upperText.replace(/\bT\b/g, '0').replace(/★/g, '0').replace(/\*/g, '0');
+            let parts = normalized.split(/[ ,;|\t\n\r]+/);
+            for (let part of parts) {
+                let val = part.trim();
+                if (val === '') continue;
+                let num = parseInt(val, 10);
+                if (!isNaN(num) && num >= 0 && num <= 75) {
+                    if (num === 0) {
+                        items.push({ value: 0, isJoker: true });
+                    } else {
+                        items.push({ value: num, isJoker: false });
+                    }
                 }
             }
-            allColumns.push(columnItems);
+            debugInfo.innerHTML += `<br>📊 Löydettiin ${items.length} numeroa/tokenia`;
+            
+            // Laske sarakkeen pituus: 5 (pieni bingo) tai 15 (iso bingo)
+            let colLen = 5;
+            if (items.length >= 50) colLen = 15;
+            else if (items.length >= 25) colLen = 5;
+            
+            for (let colIdx = 0; colIdx < 5; colIdx++) {
+                let columnItems = [];
+                for (let row = 0; row < colLen; row++) {
+                    let idx = colIdx * colLen + row;
+                    if (idx < items.length) {
+                        columnItems.push(items[idx]);
+                    } else {
+                        columnItems.push({ value: (colIdx * 10 + row + 1) % 75 + 1, isJoker: false });
+                    }
+                }
+                allColumns.push(columnItems);
+            }
         }
         
         // Näytä debug: kuinka monta numeroa kussakin sarakkeessa
