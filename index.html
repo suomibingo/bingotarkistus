@@ -259,8 +259,8 @@
         <div class="setting-group">
             <span>🎯 Tavoiterivien määrä:</span>
             <select id="targetRowsSelect">
-                <option value="1">1 rivi</option>
-                <option value="2" selected>2 riviä</option>
+                <option value="1" selected>1 rivi</option>
+                <option value="2">2 riviä</option>
                 <option value="3">3 riviä</option>
                 <option value="4">4 riviä</option>
                 <option value="5">5 riviä</option>
@@ -325,7 +325,7 @@
     let currentMode = "small";
     let tvNumbers = new Set();
     let currentGrids = [];
-    let targetRows = 2;
+    let targetRows = 1;
     let activeScan = "tv";
     
     // Kamera
@@ -404,31 +404,31 @@
     //   2) Pelkkä numerosarja: "1,5,3,0,2,16,20,..." (5 tai 15 numeroa per sarake)
     function parseTicketQR(text) {
         let upperText = text.toUpperCase().trim();
-        debugInfo.innerHTML = "📄 Raaka QR: " + text.substring(0, 200);
-        
-        let letters = ['B', 'I', 'N', 'G', 'O'];
+        debugInfo.innerHTML = "📄 Raaka QR: " + text.substring(0, 500);
+
+        let letters = ['B','I','N','G','O'];
         let allColumns = [];
-        
-        // --- Formaatti 1: Kirjainmerkitty ---
-        // Tuetaan: "B: [1,5,3]; I: [16,20,...]" tai "B:1,5,3 I:16,20" tai "B 1 5 3 I 16 20"
-        let hasLabels = /\bB[\s:\[;,]/.test(upperText) && /\bI[\s:\[;,]/.test(upperText);
-        
+
+        // Pilko puolipisteillä: "B: 5, 12, 3; I: 22, 18, ..." → ["B: 5, 12, 3", " I: 22, 18, ..."]
+        let segments = upperText.split(';');
+        debugInfo.innerHTML += '<br>🔢 Segmenttejä: ' + segments.length;
+
+        let hasLabels = /B\s*:/.test(upperText) && /I\s*:/.test(upperText);
+        debugInfo.innerHTML += '<br>🔤 hasLabels: ' + hasLabels;
+
         if (hasLabels) {
-            debugInfo.innerHTML += '<br>🔤 Formaatti: B: 1,2,3; I: 16,17,...';
-            // Pilko puolipisteillä sarakeosiin: ["B: 1,2,3", "I: 16,17", ...]
-            let segments = upperText.split(';');
             for (let colIdx = 0; colIdx < letters.length; colIdx++) {
                 let letter = letters[colIdx];
+                // Etsi segmentti joka alkaa tällä kirjaimella
+                let seg = segments.find(s => /^\s*/.test(s) && new RegExp('^\\s*' + letter + '\\s*:').test(s));
                 let columnItems = [];
-                // Etsi se segmentti joka alkaa tällä kirjaimella
-                let seg = segments.find(s => s.trim().match(new RegExp('^' + letter + '\\s*:')));
                 if (seg) {
-                    // Poista "B:" alusta, jäljelle jää numerot
-                    let numPart = seg.replace(new RegExp('^[^:]*:'), '').trim();
-                    let parts = numPart.split(/[ ,]+/);
+                    let numPart = seg.replace(new RegExp('^[\\s\\S]*?:'), '').trim();
+                    let parts = numPart.split(/[\s,]+/);
                     for (let part of parts) {
                         let val = part.trim().toUpperCase();
-                        if (val === 'T' || val === '★' || val === 'STAR' || val === '*' || val === '0') {
+                        if (val === '' ) continue;
+                        if (val === 'T' || val === '0') {
                             columnItems.push({ value: 0, isJoker: true });
                         } else {
                             let num = parseInt(val, 10);
@@ -438,113 +438,75 @@
                         }
                     }
                 }
-                debugInfo.innerHTML += `<br>📊 ${letter}: ${columnItems.length} numeroa`;
+                debugInfo.innerHTML += '<br>📊 ' + letter + ': ' + columnItems.length + ' numeroa';
                 if (columnItems.length === 0) {
                     for (let i = 0; i < 5; i++) columnItems.push({ value: (colIdx * 10 + i + 1) % 75 + 1, isJoker: false });
                 }
                 allColumns.push(columnItems);
             }
         } else {
-            // --- Formaatti 2: Pelkkä numerosarja, sarakejärjestyksessä B→I→N→G→O ---
-            // Joker voi olla 0, T, ★, *
-            debugInfo.innerHTML += '<br>🔢 Formaatti: Numerosarja (B-sarake ensin, sitten I, N, G, O)';
+            // Pelkkä numerosarja ilman kirjaimia
+            debugInfo.innerHTML += '<br>🔢 Formaatti: pelkkä numerosarja';
             let items = [];
-            // Korvaa jokerimerkinnät nollalla
-            let normalized = upperText.replace(/\bT\b/g, '0').replace(/★/g, '0').replace(/\*/g, '0');
-            let parts = normalized.split(/[ ,;|\t\n\r]+/);
+            let normalized = upperText.replace(/\bT\b/g, '0');
+            let parts = normalized.split(/[\s,;|]+/);
             for (let part of parts) {
                 let val = part.trim();
                 if (val === '') continue;
                 let num = parseInt(val, 10);
                 if (!isNaN(num) && num >= 0 && num <= 75) {
-                    if (num === 0) {
-                        items.push({ value: 0, isJoker: true });
-                    } else {
-                        items.push({ value: num, isJoker: false });
-                    }
+                    items.push(num === 0 ? { value: 0, isJoker: true } : { value: num, isJoker: false });
                 }
             }
-            debugInfo.innerHTML += `<br>📊 Löydettiin ${items.length} numeroa/tokenia`;
-            
-            // Laske sarakkeen pituus: 5 (pieni bingo) tai 15 (iso bingo)
-            let colLen = 5;
-            if (items.length >= 50) colLen = 15;
-            else if (items.length >= 25) colLen = 5;
-            
+            let colLen = items.length >= 50 ? 15 : 5;
             for (let colIdx = 0; colIdx < 5; colIdx++) {
                 let columnItems = [];
                 for (let row = 0; row < colLen; row++) {
                     let idx = colIdx * colLen + row;
-                    if (idx < items.length) {
-                        columnItems.push(items[idx]);
-                    } else {
-                        columnItems.push({ value: (colIdx * 10 + row + 1) % 75 + 1, isJoker: false });
-                    }
+                    columnItems.push(idx < items.length ? items[idx] : { value: (colIdx * 10 + row + 1) % 75 + 1, isJoker: false });
                 }
                 allColumns.push(columnItems);
             }
         }
-        
-        // Näytä debug: kuinka monta numeroa kussakin sarakkeessa
-        debugInfo.innerHTML += `<br>📊 Sarakkeiden pituudet: B:${allColumns[0].length}, I:${allColumns[1].length}, N:${allColumns[2].length}, G:${allColumns[3].length}, O:${allColumns[4].length}`;
-        
-        // Määritä rivien määrä (5 = pieni, 15 = iso)
+
+        debugInfo.innerHTML += '<br>📊 Sarakkeet: B:' + allColumns[0].length + ' I:' + allColumns[1].length + ' N:' + allColumns[2].length + ' G:' + allColumns[3].length + ' O:' + allColumns[4].length;
+
         let rowCount = allColumns[0].length;
-        debugInfo.innerHTML += `<br>📊 Rivien määrä sarakkeessa: ${rowCount}`;
-        
-        // Tarkista onko iso bingo (15 riviä per sarake)
         let isBigMode = (currentMode === 'big') || (rowCount >= 10);
-        
+
         if (isBigMode) {
-            // Iso bingo: 3 ruudukkoa (5 riviä per ruudukko)
-            // Jaetaan 15 riviä kolmeen 5 rivin lohkoon
             let blocks = [];
             for (let blockIdx = 0; blockIdx < 3; blockIdx++) {
                 let grid = Array(5).fill().map(() => Array(5).fill(null));
                 for (let col = 0; col < 5; col++) {
-                    let columnItems = allColumns[col];
                     for (let row = 0; row < 5; row++) {
                         let itemIndex = blockIdx * 5 + row;
-                        if (columnItems && itemIndex < columnItems.length) {
-                            grid[row][col] = columnItems[itemIndex];
-                        } else {
-                            grid[row][col] = { value: (row * 5 + col + 1 + blockIdx * 25) % 75 + 1, isJoker: false };
-                        }
+                        let col_items = allColumns[col];
+                        grid[row][col] = (col_items && itemIndex < col_items.length)
+                            ? col_items[itemIndex]
+                            : { value: (row * 5 + col + 1 + blockIdx * 25) % 75 + 1, isJoker: false };
                     }
                 }
                 blocks.push(grid);
             }
-            debugInfo.innerHTML += `<br>✅ Iso bingo: 3 ruudukkoa (ylä, keski, ala)`;
-            // Näytä ensimmäinen ruudukko
-            if (blocks[0]) {
-                let firstRow = blocks[0][0].map(c => c.isJoker ? "T" : c.value).join(", ");
-                debugInfo.innerHTML += `<br>📊 Yläruudukko rivi0: ${firstRow}`;
-            }
+            debugInfo.innerHTML += '<br>✅ Iso bingo: 3 ruudukkoa';
             return blocks;
         } else {
-            // Pieni bingo: 5x5 ruudukko
             let grid = Array(5).fill().map(() => Array(5).fill(null));
             for (let col = 0; col < 5; col++) {
-                let columnItems = allColumns[col];
                 for (let row = 0; row < 5; row++) {
-                    if (columnItems && row < columnItems.length) {
-                        grid[row][col] = columnItems[row];
-                    } else {
-                        grid[row][col] = { value: (row * 5 + col + 1) % 75 + 1, isJoker: false };
-                    }
+                    let col_items = allColumns[col];
+                    grid[row][col] = (col_items && row < col_items.length)
+                        ? col_items[row]
+                        : { value: (row * 5 + col + 1) % 75 + 1, isJoker: false };
                 }
             }
-            debugInfo.innerHTML += `<br>✅ Pieni bingo: 5x5 ruudukko`;
-            // Näytä ensimmäinen rivi (B,I,N,G,O sarakkeet)
-            let firstRow = grid[0].map(c => c.isJoker ? "T" : c.value).join(", ");
-            debugInfo.innerHTML += `<br>📊 rivi0 (B,I,N,G,O): ${firstRow}`;
-            let secondRow = grid[1].map(c => c.isJoker ? "T" : c.value).join(", ");
-            debugInfo.innerHTML += `<br>📊 rivi1: ${secondRow}`;
+            debugInfo.innerHTML += '<br>✅ Pieni bingo: 5x5';
             return [grid];
         }
     }
-    
-    // TV-skannaus
+
+        // TV-skannaus
     function processTvScan(decodedText) {
         if (lastScannedData === decodedText) return;
         lastScannedData = decodedText;
