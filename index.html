@@ -409,23 +409,23 @@
         let letters = ['B', 'I', 'N', 'G', 'O'];
         let allColumns = [];
         
-        // --- Formaatti 1: Kirjainmerkitty (B: ... I: ... N: ... G: ... O: ...) ---
-        // Tarkistetaan onko QR:ssa B ja I kirjaimet erillisesti
-        let hasLabels = /\bB[\s:;,]/.test(upperText) && /\bI[\s:;,]/.test(upperText);
+        // --- Formaatti 1: Kirjainmerkitty ---
+        // Tuetaan: "B: [1,5,3]; I: [16,20,...]" tai "B:1,5,3 I:16,20" tai "B 1 5 3 I 16 20"
+        let hasLabels = /\bB[\s:\[;,]/.test(upperText) && /\bI[\s:\[;,]/.test(upperText);
         
         if (hasLabels) {
-            debugInfo.innerHTML += '<br>🔤 Formaatti: Kirjainmerkitty (B:... I:... N:... G:... O:...)';
+            debugInfo.innerHTML += '<br>🔤 Formaatti: B: 1,2,3; I: 16,17,...';
+            // Pilko puolipisteillä sarakeosiin: ["B: 1,2,3", "I: 16,17", ...]
+            let segments = upperText.split(';');
             for (let colIdx = 0; colIdx < letters.length; colIdx++) {
                 let letter = letters[colIdx];
-                // Etsi kirjaimen jälkeiset numerot ennen seuraavaa kirjainta tai loppuun
-                let nextLetters = letters.slice(colIdx + 1).join('|');
-                let pat = nextLetters
-                    ? new RegExp(`\\b${letter}[\\s:;,]*([\\dT★* ,;]+?)(?=\\b(?:${nextLetters})\\b|$)`, 'i')
-                    : new RegExp(`\\b${letter}[\\s:;,]*([\\dT★* ,;]+)$`, 'i');
-                let match = upperText.match(pat);
                 let columnItems = [];
-                if (match) {
-                    let parts = match[1].split(/[ ,;]+/);
+                // Etsi se segmentti joka alkaa tällä kirjaimella
+                let seg = segments.find(s => s.trim().match(new RegExp('^' + letter + '\\s*:')));
+                if (seg) {
+                    // Poista "B:" alusta, jäljelle jää numerot
+                    let numPart = seg.replace(new RegExp('^[^:]*:'), '').trim();
+                    let parts = numPart.split(/[ ,]+/);
                     for (let part of parts) {
                         let val = part.trim().toUpperCase();
                         if (val === 'T' || val === '★' || val === 'STAR' || val === '*' || val === '0') {
@@ -438,6 +438,7 @@
                         }
                     }
                 }
+                debugInfo.innerHTML += `<br>📊 ${letter}: ${columnItems.length} numeroa`;
                 if (columnItems.length === 0) {
                     for (let i = 0; i < 5; i++) columnItems.push({ value: (colIdx * 10 + i + 1) % 75 + 1, isJoker: false });
                 }
