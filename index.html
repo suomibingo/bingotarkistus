@@ -420,7 +420,7 @@
             for (let colIdx = 0; colIdx < letters.length; colIdx++) {
                 let letter = letters[colIdx];
                 // Etsi segmentti joka alkaa tällä kirjaimella
-                let seg = segments.find(s => /^\s*/.test(s) && new RegExp('^\\s*' + letter + '\\s*:').test(s));
+                let seg = segments.find(s => new RegExp('^\\s*' + letter + '\\s*:').test(s));
                 let columnItems = [];
                 if (seg) {
                     let numPart = seg.replace(new RegExp('^[\\s\\S]*?:'), '').trim();
