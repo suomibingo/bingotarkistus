@@ -717,7 +717,9 @@
         let target = targetRows;
         let verdictHtml = "";
         let bingoAchieved = false;
-        if (currentMode === 'small') {
+        // Tunnistetaan automaattisesti: jos ruudukkoja on 3, se on iso bingo
+        let isoBingo = currentGrids.length >= 3;
+        if (!isoBingo) {
             let total = rowsPerGrid[0] || 0;
             bingoAchieved = (total >= target);
             verdictHtml = bingoAchieved ? "🏆 BINGO ON AITO! 🏆" : `❌ EI BINGOA VIELÄ (${total}/${target} riviä)`;
@@ -890,7 +892,7 @@
         }
         bigNote.style.display = (mode === 'big') ? 'flex' : 'none';
         targetRowsSelect.disabled = (mode === 'extra');
-        currentGrids = [];
+        // Älä tyhjennä currentGrids moodia vaihtaessa
         tvNumbers.clear();
         updateTvPreview();
         calculateAndRender();
