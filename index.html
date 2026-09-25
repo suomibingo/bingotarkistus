@@ -88,6 +88,13 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .logo span:nth-child(5) { background: var(--ball-o); }
 .home-actions { display: flex; flex-direction: column; gap: 16px; width: min(340px, 86vw); }
 .home-actions .btn { padding: 20px 24px; font-size: 1.4rem; }
+.size-toggle { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 4px; }
+.size-toggle-label { color: var(--muted); font-size: .95rem; font-weight: 600; }
+.size-toggle-btns { display: flex; gap: 8px; background: var(--panel); border: 2px solid var(--panel-line); border-radius: 16px; padding: 4px; }
+.size-toggle-btns button {
+  padding: 10px 22px; border-radius: 12px; font-weight: 700; font-size: 1.05rem; color: var(--muted); background: transparent;
+}
+.size-toggle-btns button.on { background: var(--gold); color: var(--gold-ink); }
 
 /* ---------- Game ---------- */
 #game { padding: 0; }
@@ -433,6 +440,13 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
 <main id="home" class="screen">
   <div class="logo" aria-label="Bingo"><span>B</span><span>I</span><span>N</span><span>G</span><span>O</span></div>
   <div class="home-actions">
+    <div class="size-toggle" id="sizeToggle" role="group" aria-label="Kortin koko">
+      <span class="size-toggle-label">Kortin koko</span>
+      <div class="size-toggle-btns">
+        <button type="button" data-size="pieni">5×5</button>
+        <button type="button" data-size="iso" class="on">5×15</button>
+      </div>
+    </div>
     <button id="btnStart" class="btn primary">Aloita peli</button>
     <button id="btnCheck" class="btn ghost">Tarkista bingo</button>
   </div>
@@ -459,10 +473,6 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
         <button id="btnJoin" class="btn primary">Liity</button>
       </div>
       <p class="or" id="joinOr">tai skannaa TV:n QR</p>
-      <div class="joinrow hidden" id="raffleRow">
-        <input id="raffleNum" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Arvontanumero" autocomplete="off" aria-label="Arvontanumero">
-        <button id="btnRaffleNum" class="btn primary">Lisää</button>
-      </div>
       <div class="seg hidden" id="segRow" role="group" aria-label="Lapun koko">
         <span class="seg-label">Lapun koko</span>
         <button data-mode="5x5">5×5</button>
@@ -493,11 +503,20 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
         <button id="btnLeave">Poistu</button>
       </div>
       <button id="btnScanPaper" class="btn primary block">Skannaa paperilappu</button>
-      <button id="btnAddRaffle" class="btn ghost block" style="margin-top:8px;">Lisää lappu arvontaan</button>
-      <p class="hint" id="paperInfo"></p>
       <h2 class="live-h">Pelaajat <span id="liveCount"></span></h2>
       <div class="plist" id="playerList"></div>
       <p class="hint" id="liveEmpty">Odotetaan pelaajia…</p>
+    </section>
+
+    <section id="paperNameView" class="hidden">
+      <p class="scan-title">Uusi pelaaja</p>
+      <p class="hint" id="paperCardInfo"></p>
+      <div class="joinrow">
+        <input id="paperNameInput" maxlength="30" placeholder="Nimimerkki" autocomplete="off" aria-label="Nimimerkki">
+        <button id="btnPaperNameOk" class="btn primary">Lisää</button>
+      </div>
+      <p class="hint err" id="paperNameHint"></p>
+      <button id="btnPaperNameCancel" class="btn ghost block" style="margin-top:8px;">Peruuta</button>
     </section>
 
     <section id="resultView" class="hidden">
@@ -549,31 +568,12 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
     </section>
 
     <div class="game-foot">
-      <button id="btnJoinInfo" class="end-btn raffle-open">Liittyminen</button>
       <button id="btnRaffle" class="end-btn raffle-open">Arvonta</button>
       <button id="btnEnd" class="end-btn">Lopeta</button>
     </div>
   </div>
 
   <div id="rotate"><div class="phone"></div><div>Käännä puhelin vaakaan</div></div>
-
-  <div id="join" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
-    <div class="modal-box join-box">
-      <div class="raffle-qr">
-        <div class="raffle-qr-img" id="raffleQr"></div>
-        <div class="raffle-code">Pelikoodi <b id="raffleCodeLine"></b></div>
-        <div class="raffle-cap">Pelaajat: avaa linkki skannaamalla.<br>Tarkistaja: paina "Tarkista bingo" ja skannaa sama koodi.</div>
-      </div>
-      <div class="join-side">
-        <h3 id="joinTitle">Liittyminen</h3>
-        <details class="manual-code">
-          <summary>Kamera ei toimi? Näytä koodi tekstinä</summary>
-          <div class="manual-code-val" id="manualCodeVal"></div>
-        </details>
-        <button id="btnJoinClose" class="btn ghost">Sulje</button>
-      </div>
-    </div>
-  </div>
 
   <div id="raffle" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="raffleTitle">
     <div class="modal-box raffle2">
@@ -3031,10 +3031,10 @@ let game = null;
 let gameId = 0;
 let wakeLock = null;
 
-function newGame() {
+function newGame(cardType) {
   const pool = [];
   for (let i = 1; i <= TOTAL; i++) pool.push(i);
-  return { pool, drawn: [], rows: 1, over: false, drawBusy: false, winBusy: false,
+  return { pool, drawn: [], rows: 1, over: false, drawBusy: false, winBusy: false, cardType: cardType === 'pieni' ? 'pieni' : 'iso',
            code: makeGameCode(), key: makeGameKey(), entries: new Map(), winners: [], relayOk: null, pubOk: null, sub: null,
            pub: { running: false, latest: null, sent: null } };
 }
@@ -3160,14 +3160,14 @@ function makeGameKey() {                                // tarkistajan salainen 
   for (let i = 0; i < 8; i++) s += CODE_CHARS[randInt(CODE_CHARS.length)];
   return s;
 }
-/* Sama QR kelpaa pelaajille (avautuu linkkinä, k-parametri ei vaikuta) ja tarkistajalle (skannataan tekstinä, k mukana) */
-function joinUrl() { return PLAYER_URL + '?peli=' + game.code + '&k=' + game.key; }
+/* Sama QR kelpaa pelaajille (avautuu linkkinä, k-parametri ei vaikuta) ja tarkistajalle (skannataan tekstinä, k mukana).
+   t-parametri kertoo pelaajille kortin koon, jonka pelinjohtaja valitsi – pelaajat eivät valitse sitä itse. */
+function joinUrl() { return PLAYER_URL + '?peli=' + game.code + '&k=' + game.key + '&t=' + game.cardType; }
 /* Kaksi erillistä kanavaa:
    - pelaajien kanava (julkinen pelikoodi): pelaajat lähettävät nimen/kortin/lapun numeron
    - pelinjohdon kanava (salainen avain): vain pelinjohtaja julkaisee TV:n numerot, joten pelaajat eivät voi väärentää niitä */
 function pubTopic(code) { return TOPIC_PREFIX + String(code).toLowerCase(); }
 function hostTopic(key) { return TOPIC_PREFIX + 'h-' + String(key).toLowerCase(); }
-function mgmtCode(g) { return g.code + '-' + g.key; }
 
 /* Julkaisu: yrittää uudelleen, jos palvelu on kiireinen (429) tai verkko katkeaa */
 async function relayPublish(topic, text) {
@@ -3242,33 +3242,22 @@ async function pumpPublish(g) {
    Pelinjohtajan puolella arvonta on yksi ruutu: Arvo-nappi arpoo voittajan nimen tai lapun numeron. */
 function cleanName(s) { return String(s).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 30); }
 
-function onHostMsg(g, p) {
+function onGameMsg(g, p) {
   if (g !== game || !p || typeof p !== 'object') return;
-  if (p.t === 'r' && Array.isArray(p.e)) {                 // lisäys: [[id, nimi/numero, 'n'|'p'], …]
-    p.e.slice(0, 60).forEach((e) => {
-      if (!Array.isArray(e)) return;
-      const id = String(e[0]).slice(0, 40), kind = e[2] === 'p' ? 'paper' : 'name';
-      const label = kind === 'paper' ? (/^\d{4,8}$/.test(String(e[1])) ? String(e[1]) : '') : cleanName(e[1]);
-      if (id && label) g.entries.set(id, { kind, label });
-    });
-    renderRaffle();
-  } else if (p.t === 'rx' && Array.isArray(p.x)) {         // poisto: {x:[id, …]}
-    p.x.slice(0, 200).forEach((id) => g.entries.delete(String(id)));
-    renderRaffle();
+  if (p.t === 'j' && typeof p.id === 'string' && typeof p.nm === 'string') {
+    const name = cleanName(p.nm);
+    if (name.length >= 2) { g.entries.set(p.id.slice(0, 40), name); renderRaffle(); }
   }
 }
+
 function startRelay() {
   const g = game;
-  g.sub = relaySubscribe(hostTopic(g.key), (p) => onHostMsg(g, p), (ok) => { g.relayOk = ok; if (g === game) renderRaffle(); });
+  /* Pelaajat (puhelin + tarkistajan rekisteröimät paperilaput) ilmoittautuvat tälle julkiselle kanavalle itse -> arvonta täyttyy automaattisesti */
+  g.sub = relaySubscribe(pubTopic(g.code), (p) => onGameMsg(g, p), (ok) => { g.relayOk = ok; if (g === game) renderRaffle(); });
   publishState();
 }
 function stopRelay() {
   if (game && game.sub) game.sub.close();
-}
-
-function entryLabel(g, key) {
-  const e = g.entries.get(key);
-  return e ? (e.kind === 'paper' ? 'Lappu ' + e.label : e.label) : key;
 }
 
 function renderRaffle() {
@@ -3287,7 +3276,7 @@ function renderRaffle() {
   const win = $('raffleWin');
   win.classList.toggle('idle', !last);
   if (last) {
-    const label = entryLabel(g, last);
+    const label = g.entries.get(last) || last;
     $('raffleWinNum').textContent = label;
     $('raffleWinNum').style.fontSize = label.length > 9 ? 'clamp(1.5rem, 8dvh, 2.4rem)' : '';
     $('raffleWinLbl').textContent = g.winners.length > 1 ? (g.winners.length + '. voittaja') : 'Voittaja';
@@ -3309,23 +3298,23 @@ function drawWinner() {
   renderRaffle();
 }
 
-/* Liittyminen: yksi QR sekä pelaajille (linkkinä) että tarkistajalle (skannataan tekstinä, sisältää myös avaimen) */
-function openJoin() {
-  $('raffleQr').innerHTML = qrSvg(joinUrl());
-  $('raffleCodeLine').textContent = game.code;
-  $('manualCodeVal').textContent = mgmtCode(game);
-  $('join').classList.remove('hidden');
-}
-
 /* ============ Navigation ============ */
 function show(id) {
   ['home', 'game', 'checker'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
 }
 
+let chosenCardType = 'iso';
+document.querySelectorAll('#sizeToggle button').forEach((b) => {
+  b.addEventListener('click', () => {
+    chosenCardType = b.dataset.size;
+    document.querySelectorAll('#sizeToggle button').forEach((x) => x.classList.toggle('on', x === b));
+  });
+});
+
 $('btnStart').addEventListener('click', () => {
   primeAudio();
   gameId++;
-  game = newGame();
+  game = newGame(chosenCardType);
   lastQrText = null;
   show('game');
   render();
@@ -3339,8 +3328,6 @@ $('btnCheckQr').addEventListener('click', checkAnnouncement);
 $('btnNoWin').addEventListener('click', noWin);
 $('btnWin').addEventListener('click', win);
 
-$('btnJoinInfo').addEventListener('click', openJoin);
-$('btnJoinClose').addEventListener('click', () => $('join').classList.add('hidden'));
 $('btnRaffle').addEventListener('click', openRaffle);
 $('btnRaffleClose').addEventListener('click', () => $('raffle').classList.add('hidden'));
 $('btnDraw').addEventListener('click', drawWinner);
@@ -13486,7 +13473,7 @@ let tv = null;                            // { numbers:[], rows:n, over? }
 let step = 'tv';                          // 'tv' | 'slip' | 'result' | 'live'
 let stream = null, detector = null, loopTimer = null, loopGen = 0, frameNo = 0;
 let lastText = '', lastAt = 0;
-let live = null;                          // { code, sub, ok, tvS, players:Map, papers:Set }
+let live = null;                          // { code, sub, ok, tvS, players:Map }
 let resultFrom = 'manual';                // 'manual' | 'slip' | 'player'
 let resultPlayer = null;
 
@@ -13611,7 +13598,8 @@ function showView(v) {
   $('scanView').classList.toggle('hidden', v !== 'scan');
   $('resultView').classList.toggle('hidden', v !== 'result');
   $('liveView').classList.toggle('hidden', v !== 'live');
-  $('steps').classList.toggle('hidden', !!live || v === 'live');
+  $('paperNameView').classList.toggle('hidden', v !== 'paperName');
+  $('steps').classList.toggle('hidden', !!live || v === 'live' || v === 'paperName');
 }
 
 function setMode(m) {
@@ -13626,7 +13614,7 @@ function goTv() {
   $('scanTitle').textContent = 'Skannaa TV:n QR';
   $('tvChip').classList.add('hidden');
   $('joinRow').classList.remove('hidden'); $('joinOr').classList.remove('hidden');
-  $('segRow').classList.add('hidden'); $('raffleRow').classList.add('hidden');
+  $('segRow').classList.add('hidden');
   showView('scan');
   setHint('Osoita kamera TV:n QR-koodiin – sama koodi jolla pelaajat liittyvät. Ilman verkkoa voit skannata TV:n numero-QR:n erikseen.');
   startCamera();
@@ -13640,46 +13628,53 @@ function goSlip() {
   $('btnRescanTv').textContent = live ? 'Takaisin' : 'Vaihda TV';
   $('tvChip').classList.remove('hidden');
   $('joinRow').classList.add('hidden'); $('joinOr').classList.add('hidden');
-  $('segRow').classList.remove('hidden'); $('raffleRow').classList.add('hidden');
+  $('segRow').classList.remove('hidden');
   showView('scan');
   setHint(live ? 'Osoita kamera paperilapun QR-koodiin.' : 'TV:n tiedot luettu. Osoita kamera lapun QR-koodiin.');
   startCamera();
 }
 
-/* Paperilapun arvontanumero (4–8 numeroa) lisätään arvontaan pelaajien kanavalle – pelinjohtaja näkee sen heti */
-function raffleInfo() {
-  return 'Arvonnassa paperilappuja: <b>' + (live ? live.papers.size : 0) + '</b>';
+/* Paperilapun tunniste kortin sisällöstä, jotta sama lappu ei rekisteröidy kahdesti (FNV-1a) */
+function paperId(slip) {
+  const norm = LETTERS.map((L) => slip.cols[L].map((v) => (v === null ? '*' : (Number.isNaN(v) ? '?' : v))).join(',')).join(';');
+  let h = 2166136261;
+  for (let i = 0; i < norm.length; i++) { h ^= norm.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return 'paper:' + (h >>> 0).toString(36);
 }
-function goRaffleAdd() {
-  step = 'raffle'; setSteps();
-  $('scanTitle').textContent = 'Lisää lappu arvontaan';
-  $('tvInfo').innerHTML = raffleInfo();
-  $('btnRescanTv').textContent = 'Valmis';
-  $('tvChip').classList.remove('hidden');
-  $('joinRow').classList.add('hidden'); $('joinOr').classList.add('hidden');
-  $('segRow').classList.add('hidden'); $('raffleRow').classList.remove('hidden');
-  showView('scan');
-  setHint('Skannaa lapun arvontanumeron QR tai kirjoita numero. Voit skannata useita lappuja peräkkäin.');
-  startCamera();
+function slipToCardString(slip) {
+  return LETTERS.map((L) => L + ': ' + slip.cols[L].map((v) => (v === null ? 'T' : (Number.isNaN(v) ? '?' : v))).join(', ')).join('; ');
 }
-async function addPaperRaffle(num) {
-  const L = live;
-  if (!L || L.adding) return;
-  if (L.papers.has(num)) { setHint('✓ Numero ' + num + ' on jo arvonnassa.'); return; }
-  L.adding = true;
-  setHint('Lisätään ' + num + '…');
-  const ok = await relayPublish(pubTopic(L.code), JSON.stringify({ t: 'p', num }));
-  L.adding = false;
-  if (live !== L || step !== 'raffle') return;
-  if (ok) {
-    L.papers.add(num);
-    flash();
-    $('tvInfo').innerHTML = raffleInfo();
-    setHint('✓ ' + num + ' lisätty arvontaan.');
-  } else {
-    setHint('Ei yhteyttä – numeroa ' + num + ' ei lisätty. Yritä uudelleen.', true);
-  }
+function cleanName(s) { return String(s).replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 30); }
+
+let pendingPaperCard = null, pendingPaperId = null;
+
+/* Uuden paperilapun rekisteröinti: kysyy nimimerkin ja lähettää sen pelaajien kanavalle, jolloin
+   tarkistaja, pelinjohtajan arvonta ja pelaajalista näkevät sen heti – täsmälleen kuin puhelinpelaaja. */
+function goPaperName(card, id) {
+  step = 'paperName';
+  stopCamera();
+  pendingPaperCard = card; pendingPaperId = id;
+  $('paperCardInfo').textContent = 'Uusi kortti, kooltaan ' + (card.len === 15 ? '5×15' : '5×5') + '. Anna pelaajalle nimimerkki.';
+  $('paperNameHint').textContent = '';
+  $('paperNameInput').value = '';
+  showView('paperName');
+  setTimeout(() => $('paperNameInput').focus(), 50);
 }
+async function confirmPaperName() {
+  const name = cleanName($('paperNameInput').value);
+  if (name.length < 2) { $('paperNameHint').textContent = 'Kirjoita nimimerkki (vähintään 2 merkkiä).'; $('paperNameInput').focus(); return; }
+  $('btnPaperNameOk').disabled = true;
+  $('paperNameHint').textContent = '';
+  const msg = JSON.stringify({ t: 'j', id: pendingPaperId, nm: name, k: pendingPaperCard.len === 15 ? 'iso' : 'pieni', c: slipToCardString(pendingPaperCard) });
+  const ok = await relayPublish(pubTopic(live.code), msg);
+  $('btnPaperNameOk').disabled = false;
+  if (!ok) { $('paperNameHint').textContent = 'Ei yhteyttä – yritä uudelleen.'; return; }
+  flash();
+  live.players.set(pendingPaperId, { id: pendingPaperId, name, card: pendingPaperCard });
+  resultFrom = 'player'; resultPlayer = pendingPaperId;
+  goResult(pendingPaperCard, { who: name });
+}
+function cancelPaperName() { goSlip(); }
 
 /* Live-näkymä: pelaajat ja TV:n numerot */
 function goLive() {
@@ -13719,24 +13714,15 @@ function goResult(slip, opts) {
       : 'Täysiä vaakarivejä ' + bt.full + ' / ' + tv.rows;
   }
 
+  // Vain oikeat ongelmat näytetään – ei rutiinivahvistuksia kortin profiilinäkymässä
   const items = [];
   const add = (cls, ic, txt) => items.push('<li class="' + cls + '"><span class="ic">' + ic + '</span><span>' + txt + '</span></li>');
-  if (ev.sizeOk) {
-    add('ok', '✓', 'Lapussa 5 saraketta (B I N G O), ' + slip.len + ' riviä · ' +
-      (multi ? ev.tables.length + ' taulukkoa, joissa 5 riviä' : '1 taulukko'));
-  } else if (!slip.same) {
-    add('fail', '✕', 'Sarakkeissa on eri määrä arvoja – lappu ei ole kunnossa');
-  } else {
-    add('fail', '✕', 'Sarakkeissa on ' + slip.len + ' arvoa, odotettu 5 tai 15');
+  if (!ev.sizeOk) {
+    add('fail', '✕', slip.same ? 'Sarakkeissa on ' + slip.len + ' arvoa, odotettu 5 tai 15' : 'Sarakkeissa on eri määrä arvoja – lappu ei ole kunnossa');
   }
   if (ev.unknown) add('fail', '✕', 'Tunnistamattomia merkkejä: ' + ev.unknown + ' kpl');
   if (ev.outOfRange.length) add('fail', '✕', 'Numero väärässä sarakkeessa: ' + ev.outOfRange.join(', '));
-  else add('ok', '✓', 'Kaikki numerot ovat oikeissa sarakkeissa (B 1–15, I 16–30, N 31–45, G 46–60, O 61–75)');
   if (ev.dupes.length) add('fail', '✕', 'Sama numero useammin kuin kerran: ' + ev.dupes.join(', '));
-  else add('ok', '✓', 'Ei kaksoiskappaleita');
-  if (multi) add('note', 'i', 'Vaakarivit lasketaan yhden taulukon sisällä – rivit eri taulukoista eivät yhdisty');
-  add('note', 'i', 'Huudettuja numeroita kortissa ' + ev.hits + ' / ' + ev.total);
-  if (slip.note) add('note', 'i', esc(slip.note));
   $('checks').innerHTML = items.join('');
 
   $('board').innerHTML = ev.tables.map((t, ti) =>
@@ -13766,7 +13752,7 @@ function closeLive() { if (live && live.subs) live.subs.forEach((x) => x.close()
 
 function joinLive(m) {
   closeLive();
-  const L = { code: m.code, key: m.key, subs: [], okPub: null, okHost: null, ok: null, tvS: -1, players: new Map(), papers: new Set() };
+  const L = { code: m.code, key: m.key, subs: [], okPub: null, okHost: null, ok: null, tvS: -1, players: new Map() };
   live = L; tv = null;
   try { localStorage.setItem('bingoMgmt', m.code + '-' + m.key); } catch (e) {}
   const status = () => { L.ok = (L.okPub === false || L.okHost === false) ? false : (L.okPub && L.okHost) ? true : null; if (live === L) renderLive(); };
@@ -13807,8 +13793,6 @@ function onLiveMsg(L, p, src) {
     const id = p.id.slice(0, 24);
     L.players.set(id, { id, name: p.nm.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 30) || '(nimetön)', card });
     renderLive();
-  } else if (p.t === 'p') {
-    if (src === 'pub' && /^\d{4,8}$/.test(String(p.num))) { L.papers.add(String(p.num)); renderLive(); }
   }
 }
 
@@ -13841,7 +13825,6 @@ function renderLive() {
     '<span class="pmeta">' + (r.pl.card.len === 15 ? '5×15' : '5×5') + '</span><span class="ppill">' + esc(r.pill) + '</span></button>').join('');
   $('liveCount').textContent = '(' + L.players.size + ')';
   $('liveEmpty').classList.toggle('hidden', L.players.size > 0);
-  $('paperInfo').textContent = L.papers.size ? 'Paperilappuja arvonnassa: ' + L.papers.size : '';
 }
 
 function showPlayer(id) {
@@ -13868,7 +13851,7 @@ function handleText(raw) {
     const mg = extractMgmt(text);
     if (mg) { joinLive(mg); return true; }
     if (extractCode(text)) {
-      setHint('Tämä koodi ei kelpaa tarkistajalle. Skannaa TV:n oma QR (Liittyminen-näkymä).', true);
+      setHint('Tämä koodi ei kelpaa tarkistajalle. Skannaa TV:n iso QR pelin ruudulta.', true);
       return false;
     }
     const t = parseTv(text);
@@ -13878,38 +13861,36 @@ function handleText(raw) {
     }
     tv = t; flash(); goSlip(); return true;
   }
-  if (step === 'raffle') {
-    const m = text.match(/^\D*(\d{4,8})\D*$/);
-    if (!m) {
-      setHint(parseSlip(text) ? 'Tämä on lapun korttikoodi. Käytä tarkistukseen "Skannaa paperilappu".' : 'Tämä ei ole arvontanumero (4–8 numeroa).', true);
-      return false;
-    }
-    addPaperRaffle(m[1]);
-    return true;
-  }
   if (step === 'slip') {
-    if (/^\D*\d{4,8}\D*$/.test(text)) { setHint('Tämä on arvontanumero. Lisää se arvontaan painikkeella "Lisää lappu arvontaan".', true); return false; }
     if (parseTv(text) || extractMgmt(text) || extractCode(text)) { setHint('Tämä on pelin QR. Skannaa paperilapun QR.', true); return false; }
     const s = parseSlip(text);
     if (!s) { setHint('QR-koodia ei tunnistettu paperilapun koodiksi.', true); return false; }
     // Lapun koko ratkaisee: jos valittu tila ei täsmää, vaihdetaan tila automaattisesti
     if (s.same && SIZES[mode] !== s.len) {
       const other = Object.keys(SIZES).find((k) => SIZES[k] === s.len);
-      if (other) {
-        s.note = 'Lappu oli kooltaan ' + other.replace('x', '×') + ', joten koko vaihdettiin.';
-        setMode(other);
-      }
+      if (other) setMode(other);
     }
     flash();
-    resultFrom = live ? 'slip' : 'manual';
-    goResult(s);
+    if (live) {
+      const id = paperId(s);
+      if (live.players.has(id)) {                        // jo rekisteröity -> näytä suoraan sen hetkinen tilanne
+        const pl = live.players.get(id);
+        resultFrom = 'player'; resultPlayer = id;
+        goResult(pl.card, { who: pl.name });
+      } else {
+        goPaperName(s, id);                               // uusi lappu -> kysy nimimerkki ja rekisteröi
+      }
+    } else {
+      resultFrom = 'manual';
+      goResult(s);
+    }
     return true;
   }
   return false;
 }
 
 /* ================= Kamera ================= */
-function scanning() { return step === 'tv' || step === 'slip' || step === 'raffle'; }
+function scanning() { return step === 'tv' || step === 'slip'; }
 
 async function startCamera() {
   const gen = ++loopGen;
@@ -14021,10 +14002,10 @@ $('joinCode').addEventListener('input', (e) => { e.target.value = e.target.value
 $('joinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnJoin').click(); });
 
 $('btnLeave').addEventListener('click', leaveLive);
-$('btnAddRaffle').addEventListener('click', goRaffleAdd);
-$('btnRaffleNum').addEventListener('click', () => { if (handleText($('raffleNum').value)) $('raffleNum').value = ''; });
-$('raffleNum').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnRaffleNum').click(); });
 $('btnScanPaper').addEventListener('click', () => { if (tv) goSlip(); });
+$('btnPaperNameOk').addEventListener('click', confirmPaperName);
+$('paperNameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmPaperName(); });
+$('btnPaperNameCancel').addEventListener('click', cancelPaperName);
 $('playerList').addEventListener('click', (e) => {
   const b = e.target.closest('.prow');
   if (b) showPlayer(b.dataset.id);
