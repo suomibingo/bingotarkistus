@@ -68,10 +68,16 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .btn[disabled] { opacity: .4; pointer-events: none; }
 
 /* ---------- Home ---------- */
-#home {
+#home, #sizePick {
   display: flex; align-items: center; justify-content: center;
   flex-wrap: wrap; gap: clamp(20px, 5vw, 56px);
 }
+.pick-title { width: 100%; text-align: center; margin: 0; font-size: 1.6rem; color: var(--muted); font-weight: 700; }
+#sizePick { gap: clamp(10px, 2.5dvh, 28px); align-content: center; }
+#sizePick .logo span { width: clamp(34px, 8vw, 92px); height: clamp(34px, 8vw, 92px); font-size: clamp(1.1rem, 4vw, 3.2rem); }
+#sizePick .pick-title { font-size: clamp(1.1rem, 3dvh, 1.6rem); }
+#sizePick .home-actions { gap: 10px; }
+#sizePick .home-actions .btn { padding: clamp(12px, 3dvh, 20px) 24px; font-size: clamp(1.05rem, 3.4dvh, 1.4rem); }
 .logo { display: flex; gap: clamp(6px, 1.6vw, 12px); }
 .logo span {
   width: clamp(52px, 13vw, 92px); height: clamp(52px, 13vw, 92px);
@@ -88,13 +94,6 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .logo span:nth-child(5) { background: var(--ball-o); }
 .home-actions { display: flex; flex-direction: column; gap: 16px; width: min(340px, 86vw); }
 .home-actions .btn { padding: 20px 24px; font-size: 1.4rem; }
-.size-toggle { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 4px; }
-.size-toggle-label { color: var(--muted); font-size: .95rem; font-weight: 600; }
-.size-toggle-btns { display: flex; gap: 8px; background: var(--panel); border: 2px solid var(--panel-line); border-radius: 16px; padding: 4px; }
-.size-toggle-btns button {
-  padding: 10px 22px; border-radius: 12px; font-weight: 700; font-size: 1.05rem; color: var(--muted); background: transparent;
-}
-.size-toggle-btns button.on { background: var(--gold); color: var(--gold-ink); }
 
 /* ---------- Game ---------- */
 #game { padding: 0; }
@@ -125,6 +124,8 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .qr-btn svg { width: 100%; height: 100%; display: block; }
 .qr-btn .qr-missing { border-width: 3px; font-size: .85rem; padding: 4px; }
 .qr-btn[disabled] { opacity: .4; }
+.join-code { text-align: center; padding-top: 6px; font-size: 1rem; font-weight: 600; color: var(--muted); flex: none; }
+.join-code b { color: var(--gold); font-size: 1.4rem; font-weight: 700; letter-spacing: .1em; margin-left: 4px; }
 
 /* center */
 .center { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
@@ -154,10 +155,10 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 @keyframes pop { 0% { transform: scale(.7); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
 
 /* recent balls */
-.recent-zone { height: clamp(46px, 19dvh, 70px); container-type: size; }
+.recent-zone { height: clamp(92px, 38dvh, 140px); container-type: size; }
 .recent {
-  --ms: min(100cqh, calc((100cqw - 24px) / 4));
-  height: 100%; display: flex; gap: 8px; justify-content: center; align-items: center;
+  --ms: min(calc(100cqh / 2 - 4px), calc((100cqw - 24px) / 4));
+  height: 100%; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-content: center;
 }
 .mini {
   --ball: var(--ball-b);
@@ -205,49 +206,26 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .modal-actions .btn { flex: 1; padding: 12px; font-size: 1.1rem; }
 
 /* arvonta */
-.modal-box.raffle-box {
-  width: min(780px, 100%); max-height: 96dvh; overflow: auto; padding: 12px 16px;
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; text-align: left; align-items: start;
-}
-.raffle-qr { text-align: center; }
-.raffle-qr-img { background: var(--paper); border-radius: 14px; padding: 8px; width: min(38dvh, 150px); aspect-ratio: 1; margin: 0 auto; }
-.raffle-qr-img svg { width: 100%; height: 100%; display: block; }
-.raffle-code { margin-top: 6px; color: var(--muted); font-size: .9rem; font-weight: 600; }
-.raffle-code b { color: var(--gold); letter-spacing: .08em; }
-.raffle-cap { color: var(--muted); font-size: .8rem; line-height: 1.2; max-width: 190px; margin: 0 auto; }
-.raffle-tabs { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
-.raffle-tabs button { background: var(--bg); border: 2px solid var(--panel-line); border-radius: 12px; padding: 5px 12px; font-size: .9rem; font-weight: 600; color: var(--muted); }
-.raffle-tabs button.on { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
-.raffle-main h3 { margin: 0; font-size: 1.1rem; color: var(--muted); }
-.raffle-count { font-size: 1rem; color: var(--muted); font-weight: 600; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
-.raffle-count b { font-size: 1.9rem; color: var(--ink); line-height: 1.1; }
-.raffle-count .net { margin-left: 6px; font-size: .85rem; }
 .net.ok { color: var(--green); }
 .net.bad { color: var(--red); }
-.raffle-win { margin: 6px 0; padding: 6px 10px; border-radius: 16px; background: var(--gold); color: var(--gold-ink); text-align: center; }
-.raffle-win .lbl { font-size: .85rem; font-weight: 700; }
-.raffle-win .num { font-size: clamp(2rem, 13dvh, 3.4rem); font-weight: 700; letter-spacing: .06em; line-height: 1.05; }
-.raffle-actions { display: flex; gap: 10px; margin-top: 6px; }
-.raffle-actions .btn { flex: 1; padding: 10px 8px; font-size: 1rem; }
-.raffle-add { display: flex; gap: 8px; margin-top: 8px; }
-.raffle-add input {
-  flex: 1; min-width: 0; padding: 8px 10px; border-radius: 12px; font: inherit; font-size: 1rem;
-  background: var(--bg); color: var(--ink); border: 2px solid var(--panel-line);
-}
-.raffle-add .btn { padding: 8px 16px; font-size: 1rem; }
-.raffle-split { color: var(--muted); font-size: .85rem; margin-bottom: 2px; }
-.raffle-prev { margin-top: 6px; color: var(--muted); font-size: .85rem; }
 .end-btn.raffle-open { margin-right: 10px; }
-.modal-box.join-box { width: min(600px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 18px; text-align: left; align-items: center; padding: 14px 18px; }
-.join-side { display: grid; gap: 10px; justify-items: start; }
-.join-side h3 { margin: 0; color: var(--muted); font-size: 1.1rem; }
-.join-side .btn { padding: 10px 22px; font-size: 1rem; }
-.manual-code { color: var(--muted); font-size: .9rem; }
-.manual-code summary { cursor: pointer; font-weight: 600; }
-.manual-code-val { margin-top: 6px; font: 700 1.05rem ui-monospace, Menlo, Consolas, monospace; letter-spacing: .04em; color: var(--gold); word-break: break-all; }
-.modal-box.raffle2 { width: min(560px, 100%); padding: 14px 18px; text-align: center; }
-.raffle2 h3 { margin: 0 0 6px; color: var(--muted); font-size: 1.1rem; }
-.raffle2 .raffle-win { margin: 6px 0 10px; padding: 8px 12px; min-height: 12dvh; display: grid; align-content: center; }
+#raffle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  gap: clamp(8px, 2dvh, 28px); padding: max(12px, env(safe-area-inset-top)) 20px max(12px, env(safe-area-inset-bottom));
+}
+.raffle-full-title { margin: 0; color: var(--muted); font-size: clamp(1rem, 3.4dvh, 1.3rem); font-weight: 700; letter-spacing: .02em; }
+.raffle-win {
+  width: min(720px, 92vw); border-radius: 28px; padding: clamp(10px, 4dvh, 56px) 24px;
+  background: var(--panel); border: 2px solid var(--panel-line);
+}
+.raffle-win .lbl { color: var(--muted); font-weight: 700; font-size: clamp(.9rem, 2.6dvh, 1.3rem); margin-bottom: 4px; }
+.raffle-win .num { font-size: clamp(1.8rem, 9dvh, 6rem); font-weight: 800; line-height: 1.08; color: var(--ink); word-break: break-word; }
+.raffle-win:not(.idle) { border-color: var(--gold); }
+.raffle-win:not(.idle) .num { color: var(--gold); }
+#raffle .raffle-info { font-size: clamp(.95rem, 2.8dvh, 1.15rem); font-weight: 600; }
+#raffle .raffle-actions { display: flex; gap: 14px; width: min(460px, 90vw); }
+#raffle .raffle-actions .btn { flex: 1; padding: clamp(10px, 2.6dvh, 18px); font-size: clamp(1.05rem, 3dvh, 1.25rem); }
+.raffle-back { margin-top: 0; padding: clamp(6px, 1.6dvh, 10px) 24px; font-size: clamp(.95rem, 2.6dvh, 1.05rem); }
 .raffle-win.idle { background: var(--bg); color: var(--muted); }
 .raffle-info { margin-top: 8px; color: var(--muted); font-size: .9rem; min-height: 1.2em; }
 .raffle-info.warn { color: var(--gold); }
@@ -440,15 +418,19 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
 <main id="home" class="screen">
   <div class="logo" aria-label="Bingo"><span>B</span><span>I</span><span>N</span><span>G</span><span>O</span></div>
   <div class="home-actions">
-    <div class="size-toggle" id="sizeToggle" role="group" aria-label="Kortin koko">
-      <span class="size-toggle-label">Kortin koko</span>
-      <div class="size-toggle-btns">
-        <button type="button" data-size="pieni">5×5</button>
-        <button type="button" data-size="iso" class="on">5×15</button>
-      </div>
-    </div>
     <button id="btnStart" class="btn primary">Aloita peli</button>
     <button id="btnCheck" class="btn ghost">Tarkista bingo</button>
+  </div>
+</main>
+
+<!-- Kortin koon valinta (kysytään vasta kun peli aloitetaan) -->
+<main id="sizePick" class="screen hidden">
+  <div class="logo" aria-label="Bingo"><span>B</span><span>I</span><span>N</span><span>G</span><span>O</span></div>
+  <h2 class="pick-title">Kortin koko</h2>
+  <div class="home-actions">
+    <button id="pickIso" class="btn primary">5 × 15</button>
+    <button id="pickPieni" class="btn primary">5 × 5</button>
+    <button id="pickBack" class="btn ghost">Takaisin</button>
   </div>
 </main>
 
@@ -460,16 +442,10 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
       <h1>Bingon tarkistus</h1>
     </div>
 
-    <div class="steps" id="steps" aria-label="Vaiheet">
-      <div class="step" id="st1"><i>1</i>TV</div>
-      <div class="step" id="st2"><i>2</i>Lappu</div>
-      <div class="step" id="st3"><i>3</i>Tulos</div>
-    </div>
-
     <section id="scanView">
       <p class="scan-title" id="scanTitle">Liity tarkistajaksi</p>
       <div class="joinrow" id="joinRow">
-        <input id="joinCode" maxlength="15" placeholder="Liittymiskoodi" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Liittymiskoodi">
+        <input id="joinCode" maxlength="12" placeholder="Pelin koodi" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Pelin koodi" inputmode="numeric">
         <button id="btnJoin" class="btn primary">Liity</button>
       </div>
       <p class="or" id="joinOr">tai skannaa TV:n QR</p>
@@ -543,6 +519,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
           <button id="btnWin" class="zone" aria-label="Voitto"></button>
         </div>
       </div>
+      <div class="join-code">Koodi <b id="joinCodeVal"></b></div>
     </section>
 
     <section class="center">
@@ -575,18 +552,6 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
 
   <div id="rotate"><div class="phone"></div><div>Käännä puhelin vaakaan</div></div>
 
-  <div id="raffle" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="raffleTitle">
-    <div class="modal-box raffle2">
-      <h3 id="raffleTitle">Lisäarvonta</h3>
-      <div class="raffle-win idle" id="raffleWin"><div class="lbl" id="raffleWinLbl">&nbsp;</div><div class="num" id="raffleWinNum">?</div></div>
-      <div class="raffle-actions">
-        <button id="btnDraw" class="btn primary">Arvo</button>
-        <button id="btnRaffleClose" class="btn ghost">Sulje</button>
-      </div>
-      <div class="raffle-info" id="raffleInfo"></div>
-    </div>
-  </div>
-
   <div id="confirm" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <div class="modal-box">
       <h3 id="confirmTitle">Lopetetaanko peli?</h3>
@@ -597,6 +562,17 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
       </div>
     </div>
   </div>
+</main>
+
+<!-- Lisäarvonta: koko ruudun täyttävä näkymä -->
+<main id="raffle" class="screen hidden">
+  <h2 class="raffle-full-title">Lisäarvonta</h2>
+  <div class="raffle-win idle" id="raffleWin"><div class="lbl" id="raffleWinLbl">&nbsp;</div><div class="num" id="raffleWinNum">?</div></div>
+  <div class="raffle-info" id="raffleInfo"></div>
+  <div class="raffle-actions">
+    <button id="btnDraw" class="btn primary">Arvo</button>
+  </div>
+  <button id="btnRaffleClose" class="btn ghost raffle-back">‹ Takaisin peliin</button>
 </main>
 
 <script>var qrcodeLib=(function(){var module={exports:{}};var exports=module.exports;//---------------------------------------------------------------------
@@ -2937,15 +2913,14 @@ function qrSvg(text) {
 }
 
 let lastQrText = null;
+/* QR näyttää aina liittymislinkin (ei koskaan huudettuja numeroita) – tarkistaja saa numerot livenä verkon kautta,
+   joten samaa liittymis-QR:ää ja koodia voi käyttää läpi koko pelin, myös myöhässä liittyville. */
 function renderQr() {
-  // Ennen ensimmäistä numeroa pelaajien linkki, sen jälkeen tarkistuksen tiedot:
-  // {"numerot":[57, 75],"rivit":2}  (huudetut numerot + montako vaakariviä vaaditaan)
-  const text = game.drawn.length
-    ? '{"numerot":[' + game.drawn.join(', ') + '],"rivit":' + game.rows + '}'
-    : joinUrl();
+  const text = joinUrl();
   if (text === lastQrText) return;
   lastQrText = text;
   $('btnCheckQr').innerHTML = qrSvg(text);
+  $('joinCodeVal').textContent = game.code;
 }
 
 /* ============ Audio ============ */
@@ -3035,7 +3010,7 @@ function newGame(cardType) {
   const pool = [];
   for (let i = 1; i <= TOTAL; i++) pool.push(i);
   return { pool, drawn: [], rows: 1, over: false, drawBusy: false, winBusy: false, cardType: cardType === 'pieni' ? 'pieni' : 'iso',
-           code: makeGameCode(), key: makeGameKey(), entries: new Map(), winners: [], relayOk: null, pubOk: null, sub: null,
+           code: makeGameCode(), entries: new Map(), winners: [], relayOk: null, pubOk: null, sub: null,
            pub: { running: false, latest: null, sent: null } };
 }
 
@@ -3076,7 +3051,7 @@ function ballColor(n) {
 
 function renderRecent() {
   const d = game.drawn, out = [];
-  for (let k = 2; k <= 5; k++) {
+  for (let k = 2; k <= 9; k++) {
     const n = d[d.length - k];
     out.push(n === undefined
       ? '<div class="mini empty"></div>'
@@ -3150,24 +3125,14 @@ function randInt(n) {                                   // 0..n-1, tasainen jaka
   do { crypto.getRandomValues(buf); } while (buf[0] >= lim);
   return buf[0] % n;
 }
+/* 3-numeroinen koodi (000–999) on tarpeeksi lyhyt näppäiltäväksi – pelaajat ja tarkistaja käyttävät samaa koodia. */
 function makeGameCode() {
-  let s = '';
-  for (let i = 0; i < 6; i++) s += CODE_CHARS[randInt(CODE_CHARS.length)];
-  return s;
+  return String(randInt(1000)).padStart(3, '0');
 }
-function makeGameKey() {                                // tarkistajan salainen avain (8 merkkiä)
-  let s = '';
-  for (let i = 0; i < 8; i++) s += CODE_CHARS[randInt(CODE_CHARS.length)];
-  return s;
-}
-/* Sama QR kelpaa pelaajille (avautuu linkkinä, k-parametri ei vaikuta) ja tarkistajalle (skannataan tekstinä, k mukana).
+/* Sama QR (tai koodi) kelpaa sekä pelaajille että tarkistajalle – yksi yhteinen kanava koko pelille.
    t-parametri kertoo pelaajille kortin koon, jonka pelinjohtaja valitsi – pelaajat eivät valitse sitä itse. */
-function joinUrl() { return PLAYER_URL + '?peli=' + game.code + '&k=' + game.key + '&t=' + game.cardType; }
-/* Kaksi erillistä kanavaa:
-   - pelaajien kanava (julkinen pelikoodi): pelaajat lähettävät nimen/kortin/lapun numeron
-   - pelinjohdon kanava (salainen avain): vain pelinjohtaja julkaisee TV:n numerot, joten pelaajat eivät voi väärentää niitä */
+function joinUrl() { return PLAYER_URL + '?peli=' + game.code + '&t=' + game.cardType; }
 function pubTopic(code) { return TOPIC_PREFIX + String(code).toLowerCase(); }
-function hostTopic(key) { return TOPIC_PREFIX + 'h-' + String(key).toLowerCase(); }
 
 /* Julkaisu: yrittää uudelleen, jos palvelu on kiireinen (429) tai verkko katkeaa */
 async function relayPublish(topic, text) {
@@ -3214,7 +3179,7 @@ function relaySubscribe(topic, onPayload, onStatus) {
 /* TV:n tila lähetetään tarkistajille: huudetut numerot + vaadittu rivimäärä (s kasvaa aina, uusin voittaa) */
 function stateMsg() {
   const g = game;
-  return JSON.stringify({ t: 'tv', n: g.drawn, r: g.rows, s: g.drawn.length * 10 + g.rows, o: g.over ? 1 : 0 });
+  return JSON.stringify({ t: 'tv', n: g.drawn, r: g.rows, s: g.drawn.length * 10 + g.rows, o: g.over ? 1 : 0, c: g.cardType });
 }
 function publishState() {
   const g = game;
@@ -3228,7 +3193,7 @@ async function pumpPublish(g) {
   st.running = true;
   while (g === game && st.latest !== null && st.latest !== st.sent) {
     const m = st.latest;
-    const ok = await relayPublish(hostTopic(g.key), m);
+    const ok = await relayPublish(pubTopic(g.code), m);
     if (g !== game) break;
     g.pubOk = ok;
     if (ok) st.sent = m; else { renderRaffle(); break; }
@@ -3287,7 +3252,7 @@ function renderRaffle() {
   }
 }
 function openRaffle() {
-  $('raffle').classList.remove('hidden');
+  show('raffle');
   renderRaffle();
 }
 function drawWinner() {
@@ -3300,28 +3265,25 @@ function drawWinner() {
 
 /* ============ Navigation ============ */
 function show(id) {
-  ['home', 'game', 'checker'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+  ['home', 'sizePick', 'game', 'checker', 'raffle'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
 }
 
-let chosenCardType = 'iso';
-document.querySelectorAll('#sizeToggle button').forEach((b) => {
-  b.addEventListener('click', () => {
-    chosenCardType = b.dataset.size;
-    document.querySelectorAll('#sizeToggle button').forEach((x) => x.classList.toggle('on', x === b));
-  });
-});
-
-$('btnStart').addEventListener('click', () => {
+function startGameWithSize(cardType) {
   primeAudio();
   gameId++;
-  game = newGame(chosenCardType);
+  game = newGame(cardType);
   lastQrText = null;
   show('game');
   render();
   renderRaffle();
   requestWake();
   startRelay();
-});
+}
+
+$('btnStart').addEventListener('click', () => { primeAudio(); show('sizePick'); });
+$('pickIso').addEventListener('click', () => startGameWithSize('iso'));
+$('pickPieni').addEventListener('click', () => startGameWithSize('pieni'));
+$('pickBack').addEventListener('click', () => show('home'));
 
 $('ball').addEventListener('click', drawNumber);
 $('btnCheckQr').addEventListener('click', checkAnnouncement);
@@ -3329,7 +3291,7 @@ $('btnNoWin').addEventListener('click', noWin);
 $('btnWin').addEventListener('click', win);
 
 $('btnRaffle').addEventListener('click', openRaffle);
-$('btnRaffleClose').addEventListener('click', () => $('raffle').classList.add('hidden'));
+$('btnRaffleClose').addEventListener('click', () => show('game'));
 $('btnDraw').addEventListener('click', drawWinner);
 
 $('btnEnd').addEventListener('click', () => {
@@ -13512,28 +13474,13 @@ function parseSlip(text) {
   return { cols, len: lens[0], same: lens.every((x) => x === lens[0]), note: '' };
 }
 
-/* Tarkistajan liittyminen: sama QR/linkki kuin pelaajilla (…/bingo/?peli=CODE&k=KEY), tai käsin kirjoitettu "CODE-KEY" */
-function extractMgmt(text) {
-  const t = String(text).trim();
-  try {
-    const u = new URL(t);
-    const code = u.searchParams.get('peli'), key = u.searchParams.get('k');
-    if (code && key && /^[A-Za-z0-9]{6}$/.test(code) && /^[A-Za-z0-9]{8}$/.test(key)) {
-      return { code: code.toUpperCase(), key: key.toUpperCase() };
-    }
-  } catch (e) {}
-  const cleaned = t.replace(/^bingo-tarkistus:/i, '').replace(/[\s·-]+/g, '');
-  const m = cleaned.match(/^([A-Za-z0-9]{6})([A-Za-z0-9]{8})$/);
-  return m ? { code: m[1].toUpperCase(), key: m[2].toUpperCase() } : null;
-}
-
-/* Pelaajien pelikoodi: linkistä (…/bingo/?peli=ABC123) tai pelkkänä koodina */
+/* Pelikoodi: sama koodi pelaajille ja tarkistajalle – linkistä (…/bingo/?peli=123) tai pelkkänä 3-numeroisena (tms.) koodina */
 function extractCode(text) {
   const t = String(text).trim();
   let c = null;
   try { c = new URL(t).searchParams.get('peli'); } catch (e) {}
-  if (!c && /^[A-Za-z0-9]{6}$/.test(t)) c = t;
-  return c && /^[A-Za-z0-9]{4,12}$/.test(c) ? c.toUpperCase() : null;
+  if (!c && /^[A-Za-z0-9]{3,12}$/.test(t)) c = t;
+  return c && /^[A-Za-z0-9]{3,12}$/.test(c) ? c.toUpperCase() : null;
 }
 
 /* ================= Tarkistus ================= */
@@ -13584,22 +13531,11 @@ function tvSummary() {
   return 'Huudettu <b>' + tv.numbers.length + '</b> numeroa · voittoon <b>' + rowsText(tv.rows) + '</b>';
 }
 
-function setSteps() {
-  const idx = ['tv', 'slip', 'result'].indexOf(step);
-  ['st1', 'st2', 'st3'].forEach((id, i) => {
-    const el = $(id);
-    el.classList.toggle('done', i < idx);
-    el.classList.toggle('now', i === idx);
-    el.firstChild.textContent = i < idx ? '✓' : String(i + 1);
-  });
-}
-
 function showView(v) {
   $('scanView').classList.toggle('hidden', v !== 'scan');
   $('resultView').classList.toggle('hidden', v !== 'result');
   $('liveView').classList.toggle('hidden', v !== 'live');
   $('paperNameView').classList.toggle('hidden', v !== 'paperName');
-  $('steps').classList.toggle('hidden', !!live || v === 'live' || v === 'paperName');
 }
 
 function setMode(m) {
@@ -13610,19 +13546,19 @@ function setMode(m) {
 
 /* Vaihe 1: liity koodilla tai skannaa TV:n numero-QR */
 function goTv() {
-  tv = null; step = 'tv'; setSteps();
+  tv = null; step = 'tv';
   $('scanTitle').textContent = 'Skannaa TV:n QR';
   $('tvChip').classList.add('hidden');
   $('joinRow').classList.remove('hidden'); $('joinOr').classList.remove('hidden');
   $('segRow').classList.add('hidden');
   showView('scan');
-  setHint('Osoita kamera TV:n QR-koodiin – sama koodi jolla pelaajat liittyvät. Ilman verkkoa voit skannata TV:n numero-QR:n erikseen.');
+  setHint('Osoita kamera TV:n QR-koodiin, tai kirjoita pelin koodi yllä.');
   startCamera();
 }
 
 /* Vaihe 2: paperilapun skannaus (manuaalinen tai live) */
 function goSlip() {
-  step = 'slip'; setSteps();
+  step = 'slip';
   $('scanTitle').textContent = 'Skannaa paperilapun QR-koodi';
   $('tvInfo').innerHTML = tvSummary();
   $('btnRescanTv').textContent = live ? 'Takaisin' : 'Vaihda TV';
@@ -13678,7 +13614,7 @@ function cancelPaperName() { goSlip(); }
 
 /* Live-näkymä: pelaajat ja TV:n numerot */
 function goLive() {
-  step = 'live'; setSteps(); stopCamera();
+  step = 'live'; stopCamera();
   showView('live');
   renderLive();
   window.scrollTo(0, 0);
@@ -13686,7 +13622,7 @@ function goLive() {
 
 function goResult(slip, opts) {
   opts = opts || {};
-  step = 'result'; setSteps();
+  step = 'result';
   stopCamera();
   const ev = evaluate(slip, tv);
   showView('result');
@@ -13750,15 +13686,12 @@ function goResult(slip, opts) {
 /* ================= Live-peli ================= */
 function closeLive() { if (live && live.subs) live.subs.forEach((x) => x.close()); }
 
-function joinLive(m) {
+function joinLive(code) {
   closeLive();
-  const L = { code: m.code, key: m.key, subs: [], okPub: null, okHost: null, ok: null, tvS: -1, players: new Map() };
+  const L = { code, subs: [], ok: null, tvS: -1, players: new Map() };
   live = L; tv = null;
-  try { localStorage.setItem('bingoMgmt', m.code + '-' + m.key); } catch (e) {}
-  const status = () => { L.ok = (L.okPub === false || L.okHost === false) ? false : (L.okPub && L.okHost) ? true : null; if (live === L) renderLive(); };
-  // pelaajien kanava: nimet, kortit, lappujen numerot – pelinjohdon kanava: TV:n numerot (vain siltä uskotaan)
-  L.subs.push(relaySubscribe(pubTopic(m.code), (p) => onLiveMsg(L, p, 'pub'), (ok) => { L.okPub = ok; status(); }));
-  L.subs.push(relaySubscribe(hostTopic(m.key), (p) => onLiveMsg(L, p, 'host'), (ok) => { L.okHost = ok; status(); }));
+  try { localStorage.setItem('bingoCode', code); } catch (e) {}
+  L.subs.push(relaySubscribe(pubTopic(code), (p) => onLiveMsg(L, p), (ok) => { L.ok = ok; if (live === L) renderLive(); }));
   flash();
   goLive();
 }
@@ -13769,10 +13702,9 @@ function leaveLive() {
   goTv();
 }
 
-function onLiveMsg(L, p, src) {
+function onLiveMsg(L, p) {
   if (live !== L || !p || typeof p !== 'object') return;
   if (p.t === 'tv') {
-    if (src !== 'host') return;                      // pelaajat eivät voi väärentää huudettuja numeroita
     const n = Array.isArray(p.n) ? p.n.map(Number) : null;
     if (!n || n.some((x) => !Number.isInteger(x) || x < 1 || x > MAX_NUMBER)) return;
     if (!Number.isInteger(p.r) || p.r < 1 || p.r > MAX_ROWS) return;
@@ -13786,7 +13718,6 @@ function onLiveMsg(L, p, src) {
       goResult(pl.card, { who: pl.name, keepScroll: true });
     }
   } else if (p.t === 'j') {
-    if (src !== 'pub') return;
     if (typeof p.id !== 'string' || typeof p.nm !== 'string' || typeof p.c !== 'string') return;
     const card = parseSlip(p.c);
     if (!card || !card.same || (card.len !== 5 && card.len !== 15)) return;
@@ -13848,12 +13779,8 @@ function handleText(raw) {
   const text = String(raw).trim();
   if (!text) return false;
   if (step === 'tv') {
-    const mg = extractMgmt(text);
-    if (mg) { joinLive(mg); return true; }
-    if (extractCode(text)) {
-      setHint('Tämä koodi ei kelpaa tarkistajalle. Skannaa TV:n iso QR pelin ruudulta.', true);
-      return false;
-    }
+    const code = extractCode(text);
+    if (code) { joinLive(code); return true; }
     const t = parseTv(text);
     if (!t) {
       setHint(parseSlip(text) ? 'Tämä on paperilapun QR. Liity ensin peliin tai skannaa TV:n QR.' : 'QR-koodia ei tunnistettu pelin koodiksi.', true);
@@ -13862,7 +13789,7 @@ function handleText(raw) {
     tv = t; flash(); goSlip(); return true;
   }
   if (step === 'slip') {
-    if (parseTv(text) || extractMgmt(text) || extractCode(text)) { setHint('Tämä on pelin QR. Skannaa paperilapun QR.', true); return false; }
+    if (parseTv(text) || extractCode(text)) { setHint('Tämä on pelin QR. Skannaa paperilapun QR.', true); return false; }
     const s = parseSlip(text);
     if (!s) { setHint('QR-koodia ei tunnistettu paperilapun koodiksi.', true); return false; }
     // Lapun koko ratkaisee: jos valittu tila ei täsmää, vaihdetaan tila automaattisesti
@@ -13978,7 +13905,7 @@ function open() {
   closeLive();
   live = null; tv = null;
   setMode(mode);
-  try { $('joinCode').value = localStorage.getItem('bingoMgmt') || ''; } catch (e) {}
+  try { $('joinCode').value = localStorage.getItem('bingoCode') || ''; } catch (e) {}
   show('checker');
   goTv();
 }
@@ -13994,11 +13921,11 @@ $('ckBack').addEventListener('click', leave);
 $('manualBtn').addEventListener('click', () => { if (handleText($('manualText').value)) $('manualText').value = ''; });
 
 $('btnJoin').addEventListener('click', () => {
-  const m = extractMgmt($('joinCode').value);
-  if (!m) { setHint('Liittymiskoodissa on 14 merkkiä, esim. K7M2QX-H4P9TBWC. Saat sen pelinjohtajalta (Liittyminen).', true); $('joinCode').focus(); return; }
-  joinLive(m);
+  const code = extractCode($('joinCode').value);
+  if (!code) { setHint('Kirjoita pelin koodi (näkyy pelinjohtajan ruudulla QR:n vieressä).', true); $('joinCode').focus(); return; }
+  joinLive(code);
 });
-$('joinCode').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''); });
+$('joinCode').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
 $('joinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnJoin').click(); });
 
 $('btnLeave').addEventListener('click', leaveLive);
