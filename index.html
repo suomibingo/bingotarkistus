@@ -94,13 +94,62 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .logo span:nth-child(5) { background: var(--ball-o); }
 .home-actions { display: flex; flex-direction: column; gap: 16px; width: min(340px, 86vw); }
 .home-actions .btn { padding: 20px 24px; font-size: 1.4rem; }
+a.end-btn { display: block; text-align: center; text-decoration: none; }
+.home-print { align-self: center; padding: 10px 28px; }
+
+/* ---------- Tulostustyökalu ---------- */
+/* Oma valoisa näkymä paperilappujen tulostukseen – eri ulkoasu kuin muualla sovelluksessa, koska
+   tuloste on tarkoitettu paperille, ei näytölle. Kaikki luokat pt-etuliitteellä, jotta ne eivät
+   sekoitu muun sovelluksen tyyleihin. Muut näkymät piiloutuvat aina .hidden-luokalla myös tulostettaessa. */
+#print.pt-root {
+  display: block; background: #455a64; padding: 20px 20px max(20px, env(safe-area-inset-bottom));
+  min-height: 100dvh; -webkit-user-select: text; user-select: text;
+}
+.pt-panel {
+  position: relative; background: #fff; color: #222; padding: 25px; border-radius: 8px;
+  width: 100%; max-width: 450px; margin: 0 auto 40px; box-shadow: 0 4px 15px rgba(0,0,0,.3); text-align: center;
+}
+.pt-back {
+  position: absolute; top: 14px; left: 14px; background: none; border: 0; color: #2c3e50;
+  font-size: 14px; font-weight: 700; padding: 4px 6px;
+}
+.pt-panel h2 { margin: 10px 0 0; color: #222; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 1.35rem; font-family: var(--font); }
+.pt-panel label { font-weight: 700; display: block; margin-top: 15px; text-align: left; font-size: 14px; color: #222; }
+.pt-panel input, .pt-panel select, .pt-btn {
+  width: 100%; padding: 12px; margin: 8px 0; border-radius: 4px; border: 1px solid #ccc;
+  font-size: 16px; box-sizing: border-box; font-family: inherit; color: #222; background: #fff;
+}
+.pt-btn { background: #2c3e50; color: #fff; border: none; font-weight: 700; }
+.pt-print-btn { background: #27ae60; margin-top: 10px; }
+
+.pt-a4 {
+  width: 210mm; height: 297mm; padding: 10mm; margin: 0 auto 30px; background: #fff;
+  box-shadow: 0 0 20px rgba(0,0,0,.4); display: grid; grid-template-columns: 1fr 1fr;
+  grid-auto-rows: min-content; column-gap: 10mm; row-gap: 5mm; box-sizing: border-box;
+  page-break-after: always; overflow: hidden;
+}
+.pt-card { display: flex; flex-direction: column; align-items: center; width: 90mm; }
+.pt-table { border: 2px solid #000; border-collapse: collapse; width: 100%; table-layout: fixed; }
+.pt-table th { border: 2px solid #000; background: #f0f0f0; height: 10mm; font-size: 22px; font-weight: 700; color: #000; }
+.pt-table td { border: 1px solid #000; height: 11mm; text-align: center; font-size: 18px; font-weight: 700; color: #000; }
+.pt-spacer td { height: 5mm; background: #ddd; border: 1px solid #000; }
+.pt-qr-wrap { display: flex; justify-content: center; width: 100%; margin-top: 8mm; }
+.pt-qr-unit { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pt-qr-unit svg { display: block; width: 180px; height: 180px; }
+.pt-qr-desc { font-size: 9px; margin-bottom: 3px; text-transform: uppercase; font-weight: 700; color: #000; }
+
+@media print {
+  #print.pt-root { background: none; padding: 0; }
+  .no-print { display: none !important; }
+  .pt-a4 { margin: 0; box-shadow: none; }
+}
 
 /* ---------- Game ---------- */
 #game { padding: 0; }
 .game-grid {
   height: 100dvh;
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.4fr) minmax(0, .8fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 10px 12px;
   padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
@@ -114,7 +163,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 .left { padding: 8px; }
 .left-cq { flex: 1; min-height: 0; container-type: size; }
 .left-row {
-  --qr: min(100cqh, 72cqw);
+  --qr: min(100cqh, 100cqw);
   width: 100%; height: 100%;
   display: grid; place-items: center;
 }
@@ -445,7 +494,26 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
   <div class="home-actions">
     <button id="btnStart" class="btn primary">Aloita peli</button>
     <button id="btnCheck" class="btn ghost">Tarkista bingo</button>
+    <button id="btnPrint" class="end-btn home-print">Tulosta paperilappuja</button>
   </div>
+</main>
+
+<!-- Tulostustyökalu: paperilappujen tulostus, oma näkymä samassa tiedostossa -->
+<main id="print" class="screen hidden pt-root">
+  <div class="pt-panel no-print">
+    <button id="btnPrintBack" class="pt-back">‹ Takaisin</button>
+    <h2>Tulosta paperilappuja</h2>
+    <label for="pt-qty">Määrä</label>
+    <input type="number" id="pt-qty" value="2" min="1">
+    <label for="pt-size">Lapun tyyppi</label>
+    <select id="pt-size">
+      <option value="pieni">Pieni (5×5) – 4 per A4</option>
+      <option value="iso">Iso (5×15) – 2 per A4</option>
+    </select>
+    <button id="btnPtGenerate" class="pt-btn">Päivitä esikatselu</button>
+    <button id="btnPtPrint" class="pt-btn pt-print-btn">Tulosta paperille</button>
+  </div>
+  <div id="pt-container"></div>
 </main>
 
 <!-- Kortin koon valinta (kysytään vasta kun peli aloitetaan) -->
@@ -592,7 +660,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
       <h3 id="jcTitle">Liity peliin</h3>
       <div class="jc-qr" id="jcQr"></div>
       <div class="jc-code">Koodi <b id="jcCodeVal"></b></div>
-      <p class="jc-note">Huudetut numerot merkitään lappuun valmiiksi, jos liitytään kesken pelin. Tarkistaja voi käyttää samaa koodia, jos yhteys katkeaa.</p>
+      <p class="jc-note">Huudetut numerot merkitään lappuun valmiiksi, jos liitytään kesken pelin.</p>
       <button id="btnJoinCodeClose" class="btn ghost">Sulje</button>
     </div>
   </div>
@@ -3325,7 +3393,63 @@ function drawWinner() {
 
 /* ============ Navigation ============ */
 function show(id) {
-  ['home', 'sizePick', 'game', 'checker', 'raffle'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+  ['home', 'sizePick', 'game', 'checker', 'raffle', 'print'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+}
+
+/* ============ Tulostustyökalu ============ */
+/* Sama kortin luontikaava ja sama qrSvg()-piirto kuin muualla sovelluksessa, joten tulostetun lapun
+   QR on täsmälleen sitä muotoa, jota tarkistaja osaa lukea (B: ...; I: ...; N: ...; G: ...; O: ...). */
+function createPrintCard(type) {
+  const rows = type === 'iso' ? 15 : 5;
+  const letters = ['B', 'I', 'N', 'G', 'O'];
+  const colData = [];
+  for (let c = 0; c < 5; c++) {
+    const start = c * 15 + 1;
+    const nums = Array.from({ length: 15 }, (_, i) => start + i);
+    nums.sort(() => Math.random() - 0.5);
+    colData.push(nums);
+  }
+  const qrParts = letters.map((L, c) => {
+    const col = [];
+    for (let r = 0; r < rows; r++) col.push(c === 2 && (r === 2 || r === 7 || r === 12) ? 'T' : colData[c][r % 15]);
+    return L + ': ' + col.join(', ');
+  });
+  let html = '<table class="pt-table"><tr>' + letters.map((L) => '<th>' + L + '</th>').join('') + '</tr>';
+  for (let r = 0; r < rows; r++) {
+    if (type === 'iso' && r > 0 && r % 5 === 0) html += '<tr class="pt-spacer">' + '<td></td>'.repeat(5) + '</tr>';
+    html += '<tr>' + letters.map((_, c) => {
+      const star = c === 2 && (r === 2 || r === 7 || r === 12);
+      return '<td>' + (star ? '★' : colData[c][r % 15]) + '</td>';
+    }).join('') + '</tr>';
+  }
+  html += '</table>';
+  return { tableHtml: html, qrString: qrParts.join('; ') };
+}
+
+function generatePrint() {
+  const qty = Math.max(1, parseInt($('pt-qty').value, 10) || 1);
+  const type = $('pt-size').value;
+  const perPage = type === 'pieni' ? 4 : 2;
+  const container = $('pt-container');
+  container.innerHTML = '';
+  let page = null;
+  for (let i = 0; i < qty; i++) {
+    if (i % perPage === 0) {
+      page = document.createElement('div');
+      page.className = 'pt-a4';
+      container.appendChild(page);
+    }
+    const { tableHtml, qrString } = createPrintCard(type);
+    const card = document.createElement('div');
+    card.className = 'pt-card';
+    card.innerHTML = tableHtml +
+      '<div class="pt-qr-wrap"><div class="pt-qr-unit"><div class="pt-qr-desc">Numerot</div>' + qrSvg(qrString) + '</div></div>';
+    page.appendChild(card);
+  }
+}
+function openPrint() {
+  show('print');
+  generatePrint();
 }
 
 function startGameWithSize(cardType) {
@@ -3344,6 +3468,11 @@ $('btnStart').addEventListener('click', () => { primeAudio(); show('sizePick'); 
 $('pickIso').addEventListener('click', () => startGameWithSize('iso'));
 $('pickPieni').addEventListener('click', () => startGameWithSize('pieni'));
 $('pickBack').addEventListener('click', () => show('home'));
+
+$('btnPrint').addEventListener('click', openPrint);
+$('btnPrintBack').addEventListener('click', () => show('home'));
+$('btnPtGenerate').addEventListener('click', generatePrint);
+$('btnPtPrint').addEventListener('click', () => window.print());
 
 $('ball').addEventListener('click', drawNumber);
 /* Kuulutukset: "väärä" kierrosluvusta, "oikea" voittoon-luvusta, "huudettu" jostain pikkupallosta */
