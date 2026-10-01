@@ -638,6 +638,7 @@ textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); 
     <div class="game-foot">
       <button id="btnJoinCode" class="end-btn raffle-open">Koodi</button>
       <button id="btnRaffle" class="end-btn raffle-open">Arvonta</button>
+      <button id="btnFullscreen" class="end-btn raffle-open">Koko näyttö</button>
       <button id="btnEnd" class="end-btn">Lopeta</button>
     </div>
   </div>
@@ -14148,6 +14149,29 @@ document.addEventListener('visibilitychange', () => {
 });
 
 setMode(mode);
+})();
+</script>
+<script>
+/* Koko näytön tila pelinjohtajalle */
+(function () {
+  var btn = document.getElementById('btnFullscreen');
+  if (!btn) return;
+  var root = document.documentElement;
+  var req = root.requestFullscreen || root.webkitRequestFullscreen;
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function label() { btn.textContent = isFs() ? 'Pienennä' : 'Koko näyttö'; }
+  btn.addEventListener('click', function () {
+    if (!req) {
+      alert('Tämä selain ei tue koko näyttöä. iPhonessa: Jaa-painike → Lisää Koti-valikkoon, niin peli avautuu ilman selainpalkkeja.');
+      return;
+    }
+    try {
+      if (isFs()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+      else { var p = req.call(root); if (p && p.catch) p.catch(function () {}); }
+    } catch (e) {}
+  });
+  document.addEventListener('fullscreenchange', label);
+  document.addEventListener('webkitfullscreenchange', label);
 })();
 </script>
 </body>
