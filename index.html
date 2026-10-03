@@ -132,10 +132,11 @@ a.end-btn { display: block; text-align: center; text-decoration: none; }
 .pt-table { border: 2px solid #000; border-collapse: collapse; width: 100%; table-layout: fixed; }
 .pt-table th { border: 2px solid #000; background: #f0f0f0; height: 10mm; font-size: 22px; font-weight: 700; color: #000; }
 .pt-table td { border: 1px solid #000; height: 11mm; text-align: center; font-size: 18px; font-weight: 700; color: #000; }
-.pt-spacer td { height: 5mm; background: #ddd; border: 1px solid #000; }
+.pt-spacer td { height: 11mm; background: #ddd; border: 1px solid #000; }
 .pt-qr-wrap { display: flex; justify-content: center; width: 100%; margin-top: 8mm; }
 .pt-qr-unit { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .pt-qr-unit svg { display: block; width: 180px; height: 180px; }
+.pt-card-iso .pt-qr-unit svg { width: 220px; height: 220px; }
 .pt-qr-desc { font-size: 9px; margin-bottom: 3px; text-transform: uppercase; font-weight: 700; color: #000; }
 
 @media print {
@@ -3442,7 +3443,7 @@ function generatePrint() {
     }
     const { tableHtml, qrString } = createPrintCard(type);
     const card = document.createElement('div');
-    card.className = 'pt-card';
+    card.className = type === 'iso' ? 'pt-card pt-card-iso' : 'pt-card';
     card.innerHTML = tableHtml +
       '<div class="pt-qr-wrap"><div class="pt-qr-unit"><div class="pt-qr-desc">Numerot</div>' + qrSvg(qrString) + '</div></div>';
     page.appendChild(card);
